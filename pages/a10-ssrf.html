@@ -267,7 +267,7 @@ if ([301, 302, 303, 307, 308].includes(response.status)) {
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ Layered Defense</div>
@@ -282,6 +282,91 @@ if ([301, 302, 303, 307, 308].includes(response.status)) {
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>PortSwigger's <a href="https://portswigger.net/web-security/ssrf" target="_blank" rel="noopener">SSRF</a> track is fantastic — it goes from a basic IP-spoof bypass all the way to out-of-band detection with OAST servers. Work through them in order; each builds on the bypass technique from the previous one.</p>
+
+                        <h3>Basic SSRF</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-localhost" target="_blank" rel="noopener">Basic SSRF against the local server</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Use the stock-check feature to access an internal admin endpoint.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-basic-ssrf-against-backend-system" target="_blank" rel="noopener">Basic SSRF against another back-end system</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Hit an internal <code>192.168.0.x</code> admin panel from the public server.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Filter Bypass</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-with-blacklist-filter" target="_blank" rel="noopener">SSRF with blacklist-based input filter</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Bypass an IP / domain blocklist with various encoding tricks.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-with-whitelist-filter" target="_blank" rel="noopener">SSRF with whitelist-based input filter</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Abuse a URL-parser inconsistency to access disallowed hosts.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-filter-bypass-via-open-redirection" target="_blank" rel="noopener">SSRF filter bypass via open redirection</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use an open redirect on an allowed host to pivot to <code>localhost</code>.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Blind SSRF (Out-of-Band)</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/blind/lab-blind-ssrf-with-out-of-band-detection" target="_blank" rel="noopener">Blind SSRF with out-of-band detection</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Trigger a request to Burp Collaborator and detect it via DNS callback.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/blind/lab-blind-ssrf-with-shellshock-exploitation" target="_blank" rel="noopener">Blind SSRF with Shellshock exploitation</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Exploit a Shellshock-flavored internal service to get RCE.</span>
+                            </li>
+                        </ul>
+
+                        <h3>URL Parsing &amp; Protocol Smuggling</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-with-url-parsing-issues" target="_blank" rel="noopener">SSRF via URL parsing issues</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Exploit the difference between the URL parser and the HTTP client.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-via-request-splitting" target="_blank" rel="noopener">SSRF via request splitting</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Smuggle a second request inside the SSRF to bypass the path check.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-via-crlf-injection" target="_blank" rel="noopener">SSRF via CRLF injection</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Inject headers via carriage return / line feed characters.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/blind/lab-blind-ssrf-via-request-line-injection" target="_blank" rel="noopener">Blind SSRF via request line injection</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Inject a full request line into the SSRF payload.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/ssrf/lab-ssrf-with-nodejs-url-parser" target="_blank" rel="noopener">SSRF with URL parsing in Node.js</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Exploit Node's <code>url.parse</code> quirks to hit internal hosts.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Use Burp Collaborator (built into Burp Pro) or the free <a href="https://github.com/projectdiscovery/interactsh" target="_blank" rel="noopener">Interactsh</a> for the OOB labs. You need an out-of-band server to confirm the SSRF actually fired.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -293,6 +378,7 @@ if ([301, 302, 303, 307, 308].includes(response.status)) {
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Code</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

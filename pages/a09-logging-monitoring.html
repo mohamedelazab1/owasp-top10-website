@@ -269,7 +269,7 @@ description: Detects credential brute-forcing attempts.</code></pre>
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ A Defensible Detection Program</div>
@@ -285,6 +285,73 @@ description: Detects credential brute-forcing attempts.</code></pre>
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>This is the only OWASP Top 10 category without a dedicated PortSwigger track — and for good reason. "Lack of logging" is invisible by design; you can't lab "what the SOC missed." The closest related labs are <a href="https://portswigger.net/web-security/information-disclosure" target="_blank" rel="noopener">Information Disclosure</a>, since verbose errors and un-redacted logs often reveal the lack of proper logging hygiene.</p>
+
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-error-messages" target="_blank" rel="noopener">Information disclosure in error messages</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Verbose errors in production — the most common detection-evading misconfiguration.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-on-debug-page" target="_blank" rel="noopener">Information disclosure on debug page</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">A debug endpoint left enabled in prod — and the alerting that should have caught it.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-version-control-history" target="_blank" rel="noopener">Information disclosure in version control history</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">A leaked <code>.git</code> — see how attackers use this to fingerprint missing controls.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-authentication-bypass-via-information-disclosure" target="_blank" rel="noopener">Authentication bypass via information disclosure</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">A leaked response header reveals the admin path — and the missing detection that should have fired.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Better Learning Resources for This Category</h3>
+                        <p>To genuinely learn detection &amp; response, you need to use the tools rather than solve labs:</p>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://github.com/splunk/security_content" target="_blank" rel="noopener">Splunk Security Content (ESCU)</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">1,700+ free Sigma / Splunk detections used by real SOCs. Read, adapt, deploy.</span>
+                            </li>
+                            <li>
+                                <a href="https://github.com/SigmaHQ/sigma" target="_blank" rel="noopener">Sigma Rules</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Vendor-neutral detection rules you can translate to Elastic, Splunk, Sentinel, etc.</span>
+                            </li>
+                            <li>
+                                <a href="https://github.com/redcanaryco/atomic-red-team" target="_blank" rel="noopener">Atomic Red Team</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Mapped ATT&amp;CK tests you run against your environment to validate your detections.</span>
+                            </li>
+                            <li>
+                                <a href="https://github.com/Security-Onion-Solutions/securityonion" target="_blank" rel="noopener">Security Onion</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Free, open-source SIEM/NSM stack. Set it up on a spare box and feed it logs from your homelab.</span>
+                            </li>
+                            <li>
+                                <a href="https://letsdefend.io/" target="_blank" rel="noopener">LetsDefend</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Free SOC analyst simulator. Investigate alerts, triage, escalate — like a real job.</span>
+                            </li>
+                            <li>
+                                <a href="https://cyberdefenders.org/blueteam-ctf-challenges/" target="_blank" rel="noopener">CyberDefenders Blue Team CTFs</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Investigate real packet captures and log files to find the attacker.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Set up a small homelab (one VM running Juice Shop + one VM running Wazuh / Security Onion) and watch the logs light up while you attack. That's how you actually learn detection.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -296,6 +363,7 @@ description: Detects credential brute-forcing attempts.</code></pre>
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Code</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

@@ -222,7 +222,7 @@ jobs:
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ Component Hygiene</div>
@@ -237,6 +237,48 @@ jobs:
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>PortSwigger covers this through <a href="https://portswigger.net/web-security/deserialization" target="_blank" rel="noopener">Insecure Deserialization</a> (often how vulnerable components are weaponized) and the dedicated <a href="https://portswigger.net/web-security/dependencies" target="_blank" rel="noopener">Vulnerable Dependencies</a> lab. The Log4Shell and supply-chain labs deserve a run too.</p>
+
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/dependencies/lab-vulnerable-dependencies-in-libraries" target="_blank" rel="noopener">Vulnerable dependencies in libraries</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Identify a known-vulnerable version of a library, then construct a working exploit.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-java-deserialization-with-apache-commons" target="_blank" rel="noopener">Exploiting Java deserialization with Apache Commons</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>ysoserial</code> gadget chains against a Java app to get RCE.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-php-deserialization" target="_blank" rel="noopener">Exploiting PHP deserialization</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>phpggc</code> POP chains against a PHP app.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-ruby-deserialization" target="_blank" rel="noopener">Exploiting Ruby deserialization</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Exploit a Ruby <code>Universal Deserialiser</code> gadget chain for RCE.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-python-pickle-deserialization" target="_blank" rel="noopener">Exploiting Python pickle deserialization</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Craft a pickle payload that runs a command on the server.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/log4shell" target="_blank" rel="noopener">Exploiting JNDI injection with Log4Shell</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Recreate the Log4j exploit from scratch against a vulnerable endpoint.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Pair these labs with <code>npx audit-ci</code>, <code>pip-audit</code>, and <code>trivy fs .</code> against your own projects to see this category in the wild.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -248,6 +290,7 @@ jobs:
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Approach</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

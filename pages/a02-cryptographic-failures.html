@@ -311,6 +311,63 @@ function encrypt(plaintext, key) {
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>PortSwigger has a dedicated <a href="https://portswigger.net/web-security/algorithms" target="_blank" rel="noopener">Cryptography</a> category plus crypto-related labs in <a href="https://portswigger.net/web-security/information-disclosure" target="_blank" rel="noopener">Information Disclosure</a> and <a href="https://portswigger.net/web-security/authentication" target="_blank" rel="noopener">Authentication</a>. Free labs, free Burp Suite, free account.</p>
+
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-error-messages" target="_blank" rel="noopener">Information disclosure in error messages</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Trigger verbose error messages that leak the framework version.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-on-debug-page" target="_blank" rel="noopener">Information disclosure on debug page</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find a leaked debug page that exposes credentials.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-http-headers" target="_blank" rel="noopener">Information disclosure in HTTP headers</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Read server / framework / version info in HTTP response headers.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-version-control-history" target="_blank" rel="noopener">Information disclosure in version control history</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Find a leaked <code>.git</code> and read secrets from old commits.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-authentication-bypass-via-information-disclosure" target="_blank" rel="noopener">Authentication bypass via information disclosure</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use a leaked header to find an exposed admin endpoint.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-source-code-disclosure-via-backup-files" target="_blank" rel="noopener">Source code disclosure via backup files</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Find and download a database backup with hashed passwords.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-source-code-disclosure-via-robots-txt" target="_blank" rel="noopener">Source code disclosure via robots.txt</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find a hidden path in robots.txt that leaks source code.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-offline-password-cracking" target="_blank" rel="noopener">Offline password cracking (bcrypt)</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Crack a leaked bcrypt hash to find a weak password.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-authentication-bypass-via-encryption-oracle" target="_blank" rel="noopener">Authentication bypass via encryption oracle</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Abuse a CBC bit-flipping flaw to forge an admin session.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Information disclosure is the gateway to crypto failures. Always start with the disclosure labs.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -324,6 +381,7 @@ function encrypt(plaintext, key) {
                         <li><a href="#testing">How to Test</a></li>
                         <li><a href="#tools">Tools</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

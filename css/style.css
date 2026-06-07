@@ -1039,6 +1039,87 @@ code:not(pre code) {
     margin: 0;
 }
 
+/* Labs list */
+.labs-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.labs-list li {
+    padding: 14px 18px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    transition: all var(--transition);
+}
+
+.labs-list li:hover {
+    background: var(--color-bg-card-hover);
+    border-left-color: var(--color-medium);
+    transform: translateX(4px);
+}
+
+.labs-list a {
+    color: var(--color-text);
+    font-weight: 600;
+    display: inline;
+    margin-right: 8px;
+}
+
+.labs-list a:hover {
+    color: var(--color-accent);
+}
+
+.labs-list .lab-desc {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+.lab-difficulty {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
+.lab-difficulty.apprentice {
+    background: var(--color-easy-bg);
+    color: var(--color-easy);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.lab-difficulty.practitioner {
+    background: var(--color-medium-bg);
+    color: var(--color-medium);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.lab-difficulty.expert {
+    background: var(--color-hard-bg);
+    color: var(--color-hard);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.labs-cta {
+    text-align: center;
+    padding: 16px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
 /* Reference table */
 .ref-table {
     width: 100%;

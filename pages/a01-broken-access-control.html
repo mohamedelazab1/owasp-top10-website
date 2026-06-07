@@ -397,6 +397,78 @@ app.use((req, res, next) => {
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>Free, hands-on labs from <a href="https://portswigger.net/web-security/access-control" target="_blank" rel="noopener">PortSwigger Web Security Academy</a>. Each lab is a real vulnerable application you can exploit legally. You'll need a free PortSwigger account and Burp Suite Community Edition (also free).</p>
+
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-unprotected-admin-functionality" target="_blank" rel="noopener">Unprotected admin functionality</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find and use an unprotected admin panel.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-unprotected-admin-functionality-with-unpredictable-url" target="_blank" rel="noopener">Unprotected admin functionality with unpredictable URL</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find a hidden admin panel by reading the JavaScript source.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-user-role-controlled-by-request-parameter" target="_blank" rel="noopener">User role controlled by request parameter</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Promote yourself to admin by changing a request parameter.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-user-role-can-be-modified-in-user-profile" target="_blank" rel="noopener">User role can be modified in user profile</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Escalate to admin via a mass assignment flaw in the profile update.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented" target="_blank" rel="noopener">URL-based access control can be circumvented</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Bypass a path-based admin check using header tricks.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-method-based-access-control-can-be-circumvented" target="_blank" rel="noopener">Method-based access control can be circumvented</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use an alternative HTTP method to bypass the check.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-insecure-direct-object-references" target="_blank" rel="noopener">Insecure Direct Object References</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Classic IDOR on a user account page.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter" target="_blank" rel="noopener">User ID controlled by request parameter</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">View another user's API key by changing the user ID.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter-with-unpredictable-user-ids" target="_blank" rel="noopener">User ID controlled by request parameter, with unpredictable user IDs</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Find a UUID leak and use it for IDOR.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-user-id-controlled-by-request-parameter-with-data-leakage-in-redirect" target="_blank" rel="noopener">User ID controlled by request parameter with data leakage in redirect</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Extract sensitive data from a redirect response body.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-multi-step-process-with-no-access-control-on-one-step" target="_blank" rel="noopener">Multi-step process with no access control on one step</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Skip a step in an admin workflow to escalate privileges.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/access-control/lab-referer-based-access-control" target="_blank" rel="noopener">Referer-based access control</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Bypass a Referer-header-based admin check.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Run the labs in order. The <em>Apprentice</em> ones are warm-ups; <em>Practitioner</em> labs match what you find in real bug bounties.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -411,6 +483,7 @@ app.use((req, res, next) => {
                         <li><a href="#tools">Tools</a></li>
                         <li><a href="#real-cases">Real CVEs</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
 
                     <div class="sidebar-info">

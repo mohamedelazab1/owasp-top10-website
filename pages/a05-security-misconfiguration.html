@@ -278,7 +278,7 @@ spring.security.user.password=${ACTUATOR_PASSWORD}</code></pre>
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ Hardening Routine</div>
@@ -295,6 +295,58 @@ spring.security.user.password=${ACTUATOR_PASSWORD}</code></pre>
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>Misconfigurations are scattered across <a href="https://portswigger.net/web-security/information-disclosure" target="_blank" rel="noopener">Information Disclosure</a>, <a href="https://portswigger.net/web-security/authentication" target="_blank" rel="noopener">Authentication</a>, and the cloud-specific challenges. These labs teach you to <em>notice</em> what's exposed.</p>
+
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-error-messages" target="_blank" rel="noopener">Information disclosure in error messages</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Trigger a stack trace and read the leaked framework version.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-on-debug-page" target="_blank" rel="noopener">Information disclosure on debug page</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find a debug endpoint left enabled in production.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-http-headers" target="_blank" rel="noopener">Information disclosure in HTTP headers</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Read <code>Server</code>, <code>X-Powered-By</code>, and other revealing headers.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-infoleak-in-version-control-history" target="_blank" rel="noopener">Information disclosure in version control history</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Pull a public <code>.git</code> and find a secret in an old commit.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-authentication-bypass-via-information-disclosure" target="_blank" rel="noopener">Authentication bypass via information disclosure</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use a leaked response header to discover and hit an admin panel.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-source-code-disclosure-via-backup-files" target="_blank" rel="noopener">Source code disclosure via backup files</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Find a forgotten <code>.bak</code> file in the web root.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/information-disclosure/lab-source-code-disclosure-via-robots-txt" target="_blank" rel="noopener">Source code disclosure via robots.txt</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Read disallowed paths in <code>robots.txt</code> and pull the source.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-username-enumeration-via-response-timing" target="_blank" rel="noopener">Username enumeration via response timing</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Enumerate users by measuring how long the server takes to respond.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Real-world misconfig bugs come from Shodan, Censys, and <code>testssl.sh</code>. Run <a href="https://www.ssllabs.com/ssltest/" target="_blank" rel="noopener">SSL Labs</a> on your own apps — it's free and tells you exactly what's misconfigured.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -306,6 +358,7 @@ spring.security.user.password=${ACTUATOR_PASSWORD}</code></pre>
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Code</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

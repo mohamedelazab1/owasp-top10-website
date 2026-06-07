@@ -276,7 +276,7 @@ def verify(token: str):
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ Integrity by Default</div>
@@ -292,6 +292,87 @@ def verify(token: str):
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>PortSwigger's <a href="https://portswigger.net/web-security/deserialization" target="_blank" rel="noopener">Insecure Deserialization</a> track is the gold standard for this category — it has labs in Java, PHP, Python, Ruby, and Node.js. Pair it with the <a href="https://portswigger.net/web-security/jwt" target="_blank" rel="noopener">JWT</a> track for token integrity issues.</p>
+
+                        <h3>Serialization Fundamentals</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/modifying-serialized-objects/lab-modifying-serialized-objects" target="_blank" rel="noopener">Modifying serialized objects</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Edit a serialized <code>User</code> object to grant yourself admin.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/modifying-serialized-data-types/lab-modifying-serialized-data-types" target="_blank" rel="noopener">Modifying serialized data types</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Exploit PHP loose comparisons on deserialized values.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-using-application-functionality" target="_blank" rel="noopener">Using application functionality to exploit insecure deserialization</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use a deserialization flaw to delete a file the app allows you to manage.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-arbitrary-object-injection-in-php" target="_blank" rel="noopener">Arbitrary object injection in PHP</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Build a POP chain that triggers a magic method.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Exploiting Specific Runtimes</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-java-deserialization-with-apache-commons" target="_blank" rel="noopener">Exploiting Java deserialization with Apache Commons</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>ysoserial</code> gadget chains for RCE.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-php-deserialization" target="_blank" rel="noopener">Exploiting PHP deserialization</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>phpggc</code> chains for RCE.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-ruby-deserialization" target="_blank" rel="noopener">Exploiting Ruby deserialization</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Trigger a Universal Deserialiser gadget.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-python-pickle-deserialization" target="_blank" rel="noopener">Exploiting Python pickle deserialization</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Craft a pickle payload that runs OS commands.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Prototype Pollution (Node.js)</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/prototype-pollution/lab-prototype-pollution-client-side" target="_blank" rel="noopener">Exploiting client-side prototype pollution</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Pollute <code>Object.prototype</code> in the browser to trigger XSS.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/prototype-pollution/lab-prototype-pollution-server-side" target="_blank" rel="noopener">Exploiting server-side prototype pollution</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Pollute on the server to gain RCE.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/prototype-pollution/lab-prototype-pollution-via-merge" target="_blank" rel="noopener">Prototype pollution via <code>merge</code></a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use lodash's <code>_.merge</code> to pollute the prototype.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/prototype-pollution/lab-prototype-pollution-via-the-constructor" target="_blank" rel="noopener">Prototype pollution via the constructor</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Bypass a fix that blocks <code>__proto__</code>.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> Pair these with the <a href="https://portswigger.net/web-security/jwt" target="_blank" rel="noopener">JWT labs</a> — token integrity is integrity too.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -303,6 +384,7 @@ def verify(token: str):
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Code</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

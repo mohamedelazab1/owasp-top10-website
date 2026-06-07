@@ -315,7 +315,7 @@ app.post('/reset-password', async (req, res) => {
                         </div>
                     </section>
 
-                    <section>
+                    <section id="prevention">
                         <h2>Prevention Checklist</h2>
                         <div class="callout success">
                             <div class="callout-title">✅ Authentication Hardening</div>
@@ -332,6 +332,96 @@ app.post('/reset-password', async (req, res) => {
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>PortSwigger's <a href="https://portswigger.net/web-security/authentication" target="_blank" rel="noopener">Authentication</a> track has <strong>20+ labs</strong> covering every flaw in this section. Work through them in order — they build on each other.</p>
+
+                        <h3>Username Enumeration</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-username-enumeration-via-different-responses" target="_blank" rel="noopener">Username enumeration via different responses</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Different error messages reveal which users exist.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-username-enumeration-via-response-timing" target="_blank" rel="noopener">Username enumeration via response timing</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Enumerate users by measuring response time.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-username-enumeration-via-subtly-different-responses" target="_blank" rel="noopener">Username enumeration via subtly different responses</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Subtle response differences leak which users exist.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Brute Force Protections</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-broken-bruteforce-protection-ip-block" target="_blank" rel="noopener">Broken brute-force protection, IP block</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Bypass the IP block with <code>X-Forwarded-For</code> rotation.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-broken-brute-force-protection-multiple-credentials-per-request" target="_blank" rel="noopener">Broken brute-force protection, multiple credentials per request</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Bypass per-username lockout with a single multi-credential request.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-password-brute-force-via-password-change" target="_blank" rel="noopener">Password brute-force via password change</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use the password-change endpoint to test candidates without rate limits.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Password Reset &amp; 2FA</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-password-reset-broken-logic" target="_blank" rel="noopener">Password reset broken logic</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Reset another user's password by tampering with the request.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-password-reset-poisoning-via-middleware" target="_blank" rel="noopener">Password reset poisoning via middleware</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Inject a header to redirect the reset link to your server.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-2fa-broken-logic" target="_blank" rel="noopener">2FA broken logic</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Brute-force the 2FA code by walking the workflow.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-2fa-bypass-using-brute-force" target="_blank" rel="noopener">2FA bypass using a brute-force attack</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">2FA codes that don't expire or are too short.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-2fa-bypass-using-stay-logged-in-cookie" target="_blank" rel="noopener">2FA bypass using a stay-logged-in cookie</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Crack the cookie to impersonate the user past 2FA.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Session Management</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-authentication-bypass-via-encryption-oracle" target="_blank" rel="noopener">Authentication bypass via encryption oracle</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Use a CBC oracle to forge a session cookie.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/authentication/lab-offline-password-cracking" target="_blank" rel="noopener">Offline password cracking (bcrypt)</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Crack a leaked bcrypt hash to find a weak password.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> After these, do PortSwigger's <a href="https://portswigger.net/web-security/jwt" target="_blank" rel="noopener">JWT</a> and <a href="https://portswigger.net/web-security/csrf" target="_blank" rel="noopener">CSRF</a> tracks too — they're closely related to auth.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -343,6 +433,7 @@ app.post('/reset-password', async (req, res) => {
                         <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
                         <li><a href="#secure-code">Secure Code</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>

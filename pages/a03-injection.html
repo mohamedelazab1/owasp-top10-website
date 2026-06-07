@@ -380,6 +380,166 @@ def preview():
                             </ul>
                         </div>
                     </section>
+
+                    <section id="labs">
+                        <h2>Practice with PortSwigger Labs</h2>
+                        <p>Injection is PortSwigger's biggest category. Start with the <a href="https://portswigger.net/web-security/sql-injection" target="_blank" rel="noopener">SQLi</a> and <a href="https://portswigger.net/web-security/cross-site-scripting" target="_blank" rel="noopener">XSS</a> tracks, then branch out to <a href="https://portswigger.net/web-security/os-command-injection" target="_blank" rel="noopener">Command Injection</a>, <a href="https://portswigger.net/web-security/nosql-injection" target="_blank" rel="noopener">NoSQL</a>, and <a href="https://portswigger.net/web-security/server-side-template-injection" target="_blank" rel="noopener">SSTI</a>.</p>
+
+                        <h3>SQL Injection</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-hidden-data" target="_blank" rel="noopener">SQL injection: WHERE clause allowing retrieval of hidden data</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">The classic <code>' OR 1=1 --</code> walkthrough.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-login-bypass" target="_blank" rel="noopener">SQL injection allowing login bypass</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Log in as the administrator without knowing the password.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-determining-number-of-columns" target="_blank" rel="noopener">UNION attack: determining the number of columns</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Use <code>ORDER BY</code> and <code>UNION SELECT NULL</code> to find the column count.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-data-from-other-tables" target="_blank" rel="noopener">UNION attack: retrieving data from other tables</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Dump the <code>users</code> table and crack the admin password.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-retrieve-multiple-values-in-single-column" target="_blank" rel="noopener">UNION attack: retrieving multiple values in a single column</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Concatenate two columns in one output field.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-querying-database-version-mysql-microsoft" target="_blank" rel="noopener">Querying the DB type and version (MySQL / MSSQL)</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Fingerprint the database, then pivot.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-listing-database-contents-non-oracle" target="_blank" rel="noopener">Listing database contents (non-Oracle)</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Enumerate tables via <code>information_schema</code>.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-blind-conditional-responses" target="_blank" rel="noopener">Blind SQL injection with conditional responses</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Extract the admin password one character at a time.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-blind-time-delays" target="_blank" rel="noopener">Blind SQL injection with time delays</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>WAITFOR DELAY</code> / <code>SLEEP</code> to confirm injection.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-blind-out-of-band-exfil" target="_blank" rel="noopener">Blind SQLi with out-of-band data exfiltration</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Use DNS lookups to exfiltrate data via Burp Collaborator.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/sql-injection/lab-sql-injection-with-filter-bypass-via-xml-encoding" target="_blank" rel="noopener">SQLi with filter bypass via XML encoding</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Bypass a WAF that strips SQL keywords using XML encoding.</span>
+                            </li>
+                        </ul>
+
+                        <h3>Cross-Site Scripting (XSS)</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-html-context-nothing-encoded" target="_blank" rel="noopener">Reflected XSS into HTML context with nothing encoded</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">The classic <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> in a search field.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/stored/lab-html-context-nothing-encoded" target="_blank" rel="noopener">Stored XSS into HTML context with nothing encoded</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Stored XSS in a comment that fires for every visitor.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/dom-based/lab-document-write-sink" target="_blank" rel="noopener">DOM XSS in <code>document.write</code> sink</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Find the <code>document.location</code> source / <code>document.write</code> sink chain.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-javascript-string-angle-brackets-html-encoded" target="_blank" rel="noopener">Reflected XSS into a JavaScript string</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Angle brackets are encoded — break out of the JS string instead.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/stored/lab-stored-xss-into-anchor-href-attribute" target="_blank" rel="noopener">Stored XSS in anchor <code>href</code> attribute</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>javascript:</code> in an href.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-angularjs-sandbox-escape" target="_blank" rel="noopener">Reflected XSS with AngularJS sandbox escape</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Break out of the AngularJS template sandbox.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-csp-bypass" target="_blank" rel="noopener">Reflected XSS protected by CSP, with CSP bypass</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Find a JSONP endpoint whitelisted by the CSP.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-very-strict-csp" target="_blank" rel="noopener">Reflected XSS protected by a very strict CSP</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Use a CSP <code>script nonce</code> that's exposed via a separate request.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/cross-site-scripting/reflected/lab-javascript-url-some-characters-blocked" target="_blank" rel="noopener">Reflected XSS in a JavaScript URL with some characters blocked</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Use Unicode escapes to bypass character filtering.</span>
+                            </li>
+                        </ul>
+
+                        <h3>OS Command Injection</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/os-command-injection/lab-simple" target="_blank" rel="noopener">OS command injection, simple case</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Run <code>whoami</code> via the stock-check feature.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/os-command-injection/lab-blind-time-delays" target="_blank" rel="noopener">Blind OS command injection with time delays</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">No output — use timing to confirm and then out-of-band exfil.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/os-command-injection/lab-blind-out-of-band-data-exfil" target="_blank" rel="noopener">Blind OS command injection with OOB data exfiltration</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Exfiltrate <code>/etc/passwd</code> via DNS to a Collaborator domain.</span>
+                            </li>
+                        </ul>
+
+                        <h3>NoSQL &amp; Template Injection</h3>
+                        <ul class="labs-list">
+                            <li>
+                                <a href="https://portswigger.net/web-security/nosql-injection/lab-nosql-injection-bypass-authentication" target="_blank" rel="noopener">Exploiting NoSQL operator injection to bypass authentication</a>
+                                <span class="lab-difficulty apprentice">Apprentice</span>
+                                <span class="lab-desc">Log in as admin using <code>{"$ne": ""}</code> as the password.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/nosql-injection/lab-nosql-injection-extract-data" target="_blank" rel="noopener">Exploiting NoSQL injection to extract data</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Use <code>$where</code> to dump unknown fields.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/server-side-template-injection/lab-server-side-template-injection-basic" target="_blank" rel="noopener">SSTI: basic</a>
+                                <span class="lab-difficulty practitioner">Practitioner</span>
+                                <span class="lab-desc">Detect and exploit a template injection in ERB.</span>
+                            </li>
+                            <li>
+                                <a href="https://portswigger.net/web-security/server-side-template-injection/lab-server-side-template-injection-with-a-custom-exploit" target="_blank" rel="noopener">SSTI with a custom exploit</a>
+                                <span class="lab-difficulty expert">Expert</span>
+                                <span class="lab-desc">Chain gadgets in a custom template engine to get RCE.</span>
+                            </li>
+                        </ul>
+
+                        <div class="labs-cta">
+                            💡 <strong>Tip:</strong> 50+ SQLi labs, 60+ XSS labs, plus command/NoSQL/SSTI — PortSwigger has more practice material than anywhere else on the web. Knock these out before moving to A04.
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="sidebar">
@@ -394,6 +554,7 @@ def preview():
                         <li><a href="#tools">Tools</a></li>
                         <li><a href="#real-cases">Real CVEs</a></li>
                         <li><a href="#prevention">Prevention</a></li>
+                        <li><a href="#labs">PortSwigger Labs</a></li>
                     </ul>
                     <div class="sidebar-info">
                         <h4>Quick Facts</h4>
