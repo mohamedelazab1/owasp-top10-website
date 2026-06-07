@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A04:2021 – Insecure Design · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A04_2021-Insecure_Design/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A04</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A04:2021</span>
+                <h1>Insecure Design</h1>
+                <p class="lead">Insecure design is a broad category representing different weaknesses, expressed as "missing or ineffective control design." It differs from insecure implementation: even perfect code cannot fix an insecure design.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff medium">Difficulty: Medium</span>
+                    <div class="vuln-tags">
+                        <span class="tag">Design</span>
+                        <span class="tag">Business Logic</span>
+                        <span class="tag">Architecture</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Parler Data Scraping (2021) — 70M Posts</h3>
+                        <p>The "free speech" social network Parler infamously had <strong>70 million posts scraped</strong> — including deleted ones, with location metadata — because the API was designed without rate limiting, and used sequential integer IDs. A researcher simply enumerated IDs 1 to 99,999,999 and pulled every post. The platform was offline shortly after. This is a textbook insecure design: no abuse-prevention controls were built into the architecture.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Robinhood (2020)</strong> — A 17-year-old social-engineered a customer support rep and got control of a high-net-worth account. The design assumed voice-based verification was safe — no defense in depth.</li>
+                            <li><strong>Strava Heatmap (2018)</strong> — The fitness app published a global heatmap that inadvertently revealed the locations of secret military bases. The design didn't consider sensitive infrastructure.</li>
+                            <li><strong>Twitter 'fleets' bug (2021)</strong> — A logic flaw in the design of Twitter's disappearing "fleets" feature on Android let attackers view fleets from any account, including protected ones, by simply changing the URL.</li>
+                            <li><strong>Verkada Cameras (2021)</strong> — Researchers found 150,000 security cameras (in hospitals, prisons, Tesla factory) accessible because the design used a "super admin" account whose credentials had been left in a publicly accessible internal app.</li>
+                            <li><strong>Snapchat Snappening (2014)</strong> — Third-party app design weakness allowed mass collection of "deleted" Snaps. The platform's API was designed to trust any client.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works — Design Flaw Categories</h2>
+                        <h3>1. Missing Rate Limiting</h3>
+                        <p>Endpoints that should be slow (login, password reset, account lookup) accept unlimited requests, enabling brute force, scraping, and account enumeration.</p>
+
+                        <h3>2. Trusting the Wrong Client</h3>
+                        <p>API returns sensitive data and trusts the client to filter it. Or assumes a "premium" tier check is sufficient when a user can change a role cookie.</p>
+
+                        <h3>3. Workflow Bypass</h3>
+                        <p>A multi-step process (signup → email verify → phone verify → payment) lets attackers skip steps and submit the final state directly.</p>
+
+                        <h3>4. Race Conditions in Business Logic</h3>
+                        <p>Two simultaneous withdrawals, two coupon redemptions, two votes. The design doesn't lock the resource, so both succeed.</p>
+
+                        <h3>5. Insecure Defaults</h3>
+                        <p>New features ship with "convenience" defaults like open sign-up, public profiles, or bypassed review.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Design — Real Code Patterns</h2>
+
+                        <h3>Example 1: Coupon Race Condition</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (Flask)</span><span>Vulnerable Design</span></div>
+                            <pre><code>@app.route('/redeem', methods=['POST'])
+def redeem_coupon():
+    code = request.json['code']
+    coupon = db.coupons.find_one({'code': code})
+    if not coupon['used']:
+        db.coupons.update_one({'_id': coupon['_id']}, {'$set': {'used': True}})
+        user.balance += coupon['value']
+        return {'ok': True}
+    return {'error': 'already used'}
+
+# ❌ TOCTOU (Time-of-check to time-of-use) bug
+# Attacker sends 50 simultaneous requests → all see used=False → all get credit
+# Fix: use an atomic update with a precondition
+# db.coupons.update_one({'_id': id, 'used': False}, {'$set': {'used': True}})</code></pre>
+                        </div>
+
+                        <h3>Example 2: No Rate Limiting on Login</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (Express)</span><span>Vulnerable Design</span></div>
+                            <pre><code>// ❌ No rate limiting — brute force is trivial
+app.post('/login', async (req, res) => {
+    const user = await db.users.findOne({ email: req.body.email });
+    if (user && await bcrypt.compare(req.body.password, user.password)) {
+        res.json({ token: sign(user) });
+    } else {
+        res.status(401).send('Invalid');
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>Example 3: Sequential IDs Without Auth on API</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable Design (Parler-style)</span></div>
+                            <pre><code>// ❌ No rate limit, predictable IDs, no access control
+app.get('/api/v1/posts/:id', (req, res) => {
+    db.posts.findOne({ id: parseInt(req.params.id) }, (err, post) => {
+        res.json(post);
+    });
+});
+// Attacker just loops: /api/v1/posts/1, /api/v1/posts/2, ...
+// Scrapes the entire database</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Coupon Race Condition</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Discover the endpoint</strong><p>Sign up, find the "redeem coupon" feature, and capture the exact request in Burp.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Send it in parallel</strong><p>Right-click the request in Burp → "Send to Intruder" → set null payload positions → set threads to 50 → start the attack.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Check the response</strong><p>All 50 requests return <code>200 OK</code> and your balance increased 50x. The coupon was redeemed 50 times.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Repeat with $1M of free credit</strong><p>Hit a real e-commerce site in 2020 that shipped this exact bug — researchers redeemed the same $100 coupon hundreds of times before someone noticed.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Design</h2>
+
+                        <h3>1. Build threat models before writing code</h3>
+                        <p>For every feature, ask: who can call this? What's the abuse case? What if they call it 1,000 times per second? Use OWASP's <a href="https://owasp.org/www-project-threat-dragon/" target="_blank" rel="noopener">Threat Dragon</a> or Microsoft's STRIDE.</p>
+
+                        <h3>2. Use established patterns</h3>
+                        <p>For workflows, use a state machine. For sensitive operations, use an idempotency key. For pagination, use opaque cursors, not <code>offset=12345</code>.</p>
+
+                        <h3>3. Rate limit at multiple layers</h3>
+                        <p>Limit per-IP, per-account, per-API-key, per-endpoint. Use Redis sliding windows. Apply stricter limits to unauthenticated endpoints.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (Express + express-rate-limit)</span><span>Secure</span></div>
+                            <pre><code>const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 10,                    // 10 attempts per window
+    message: 'Too many login attempts, try again later',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.post('/login', loginLimiter, async (req, res) => { /* ... */ });</code></pre>
+                        </div>
+
+                        <h3>4. Atomic state transitions</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (MongoDB)</span><span>Secure</span></div>
+                            <pre><code># ✅ Atomic: only succeeds if 'used' is still False
+result = db.coupons.update_one(
+    {'_id': coupon_id, 'used': False},
+    {'$set': {'used': True, 'used_by': user_id, 'used_at': datetime.utcnow()}}
+)
+if result.modified_count == 0:
+    return {'error': 'already used'}
+user.balance += coupon['value']
+user.save()</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Secure by Design</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Establish a secure development lifecycle (SDL) with threat modeling at design time.</li>
+                                <li>Use established libraries and design patterns — don't reinvent auth, payments, or workflows.</li>
+                                <li>Write abuse cases alongside user stories. "What can a logged-in user do that they shouldn't?"</li>
+                                <li>Segment tenants and apply resource quotas per tenant.</li>
+                                <li>Make all sensitive operations idempotent.</li>
+                                <li>Apply rate limiting and resource limits at the gateway, not just in the application.</li>
+                                <li>Document assumptions and constraints — e.g., "we assume the user is human" → add a CAPTCHA for high-value flows.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">40</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Medium</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

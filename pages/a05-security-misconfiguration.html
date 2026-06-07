@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A05:2021 – Security Misconfiguration · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A05</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A05:2021</span>
+                <h1>Security Misconfiguration</h1>
+                <p class="lead">Security misconfiguration is the most commonly seen issue, found in 90%+ of tested applications. It includes unpatched software, default credentials, exposed admin panels, verbose error messages, and insecure cloud storage.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff easy">Difficulty: Easy</span>
+                    <div class="vuln-tags">
+                        <span class="tag">Cloud</span>
+                        <span class="tag">Defaults</span>
+                        <span class="tag">Hardening</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Capital One Breach (2019) — 100M Records</h3>
+                        <p>A former AWS employee exploited a <strong>Server-Side Request Forgery</strong> vulnerability (A10 in our list — covered later) made possible by a misconfigured Web Application Firewall. The firewall had overly permissive IAM roles that allowed the attacker to query the EC2 metadata service and obtain temporary AWS credentials. Those credentials granted access to 100 million customer records including 140,000 Social Security numbers and 80,000 bank account numbers.</p>
+                        <p>Capital One paid <strong>$190 million</strong> in settlements. The same misconfiguration pattern has been found in countless other companies with S3 buckets and similar setups.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Misconfigured S3 Buckets (2017-2020)</strong> — A huge wave of breaches: Accenture (137 GB), Verizon (6M customers), Booz Allen Hamilton (28,000 SSHs), Time Warner Cable (4M subscribers), and millions of others. The cause was almost always S3 buckets set to "Public" with a few clicks.</li>
+                            <li><strong>CloudPets (2017)</strong> — Smart toys leaked 2.2M voice recordings of children and families via an exposed MongoDB instance with no password.</li>
+                            <li><strong>Elasticsearch exposures</strong> — A Shodan study found over 4,000 Elasticsearch databases exposed without authentication, holding 1.1B+ records.</li>
+                            <li><strong>Default credentials (Honda, Nissan, etc.)</strong> — In 2022, researcher Sam Curry chained a few misconfigurations to remoted unlock and start Honda and Nissan cars from anywhere.</li>
+                            <li><strong>Microsoft Exchange ProxyLogon (2021)</strong> — Hafnium and 30+ APT groups exploited a misconfiguration in default Exchange deployments to install webshells on hundreds of thousands of orgs.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works — The Misconfiguration Zoo</h2>
+                        <h3>1. Cloud Storage Set to "Public"</h3>
+                        <p>The single most damaging misconfiguration. An S3 bucket, Azure Blob, or Google Cloud Storage bucket set to public exposes every file inside to the internet.</p>
+
+                        <h3>2. Default Credentials</h3>
+                        <p>Jenkins admin/admin, Tomcat manager/manager, Grafana admin/admin, MySQL root/no password, MongoDB no auth. Default creds are well-known and constantly scanned for.</p>
+
+                        <h3>3. Verbose Error Messages &amp; Stack Traces</h3>
+                        <p>A production stack trace reveals file paths, framework versions, database types, and internal IP addresses — gold for an attacker planning the next step.</p>
+
+                        <h3>4. Directory Listing Enabled</h3>
+                        <p>The web server happily shows a file listing of <code>/uploads/</code> or <code>/backup/</code>. Users browse the source code, backups, and config files.</p>
+
+                        <h3>5. Unpatched Software</h3>
+                        <p>The latest version of WordPress, Spring, Apache, or whatever's running has a public CVE. You never patched.</p>
+
+                        <h3>6. Outdated TLS / Weak Ciphers</h3>
+                        <p>SSLv3, TLS 1.0/1.1, RC4, 3DES, MD5-signed certificates — all still commonly found.</p>
+
+                        <h3>7. Unnecessary Features Enabled</h3>
+                        <p>Sample apps, debug consoles (e.g., <code>/console</code> on Rails in production), administrative interfaces left on, test endpoints.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Code &amp; Config Examples</h2>
+
+                        <h3>Example 1: Public S3 Bucket (Terraform)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Terraform (HCL)</span><span>Vulnerable</span></div>
+                            <pre><code>resource "aws_s3_bucket" "customer_data" {
+    bucket = "myapp-customer-data"
+}
+
+resource "aws_s3_bucket_acl" "customer_data" {
+    bucket = aws_s3_bucket.customer_data.id
+    acl    = "public-read"   // ❌ public-read = world-readable
+}
+
+# Even with a private bucket, a public bucket policy can expose it.
+# The S3 console will then show a yellow "Public" badge.</code></pre>
+                        </div>
+
+                        <h3>Example 2: Spring Boot Actuator in Production</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">application.properties</span><span>Vulnerable</span></div>
+                            <pre><code># ❌ Exposing all actuator endpoints to the world
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=always
+
+# Attacker visits /actuator/env → sees ALL environment variables
+# /actuator/heapdump → downloads the entire JVM heap (may include secrets)
+# /actuator/threaddump → reveals internal class names, stack info</code></pre>
+                        </div>
+
+                        <h3>Example 3: Verbose Django Errors in Production</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Django settings</span><span>Vulnerable</span></div>
+                            <pre><code># ❌ DEBUG = True in production
+DEBUG = True
+
+# Result: a 500 error page shows the full Python stack trace,
+# local variables, Django version, database engine, secret_key,
+# and clickable links to specific lines in your source code.
+# This is the famous "yellow Django page of death."</code></pre>
+                        </div>
+
+                        <h3>Example 4: Default MongoDB No Authentication</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">MongoDB Config</span><span>Vulnerable</span></div>
+                            <pre><code># /etc/mongod.conf
+# ❌ No authentication enabled
+security:
+  authorization: disabled
+bindIp: 0.0.0.0   # ❌ bound to all interfaces, not just localhost
+
+# Result: anyone who can reach the port gets full DB access.
+# MongoDB was the poster child for this in 2017 when ransomware
+# gangs (e.g., "MongoDB Apocalypse") wiped 28,000 exposed servers.</code></pre>
+                        </div>
+
+                        <h3>Example 5: Apache Directory Listing</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Apache httpd.conf</span><span>Vulnerable</span></div>
+                            <pre><code>&lt;Directory /var/www/uploads&gt;
+    Options Indexes FollowSymLinks   # ❌ Indexes enables directory listing
+    AllowOverride None
+    Require all granted
+&lt;/Directory&gt;
+
+# Result: /uploads/ shows a list of every uploaded file.
+# If /backups/ is also configured this way, full database dumps leak.</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Finding Public S3 Buckets</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Pick a target</strong><p>Identify a company or project you're researching. Note its main domain and known asset domains.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Enumerate bucket names</strong><p>Common patterns: <code>{company}-backup</code>, <code>{company}-uploads</code>, <code>{company}-dev</code>, <code>{company}-data</code>. Tools: <code>S3Scanner</code>, <code>bucket-stream</code>.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Test for public access</strong><p>Try: <code>aws s3 ls s3://target-bucket --no-sign-request</code> or just <code>curl https://target-bucket.s3.amazonaws.com/</code> in a browser. If a listing comes back, it's public.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Recursively download</strong><p><code>aws s3 sync s3://target-bucket ./loot --no-sign-request</code> — and the contents are now on your disk.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content"><strong>Report responsibly</strong><p>Follow the company's security.txt / responsible disclosure process. Big bounties (often $5,000–$25,000) for public S3 buckets containing sensitive data.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Configuration</h2>
+
+                        <h3>1. Cloud Storage Defaults</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Terraform (HCL)</span><span>Secure</span></div>
+                            <pre><code>resource "aws_s3_bucket" "customer_data" {
+    bucket = "myapp-customer-data"
+}
+
+# Block all public access at the account level
+resource "aws_s3_bucket_public_access_block" "customer_data" {
+    bucket = aws_s3_bucket.customer_data.id
+    block_public_acls       = true
+    block_public_policy     = true
+    ignore_public_acls      = true
+    restrict_public_buckets = true
+}
+
+# Use short-lived signed URLs for user uploads/downloads
+resource "aws_s3_bucket_acl" "customer_data" {
+    bucket = aws_s3_bucket.customer_data.id
+    acl    = "private"
+}</code></pre>
+                        </div>
+
+                        <h3>2. Production Hardening</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Django settings</span><span>Secure</span></div>
+                            <pre><code>DEBUG = False
+ALLOWED_HOSTS = ['app.example.com']
+
+# Use Sentry, Rollbar, or your own logger to get stack traces internally
+LOGGING = {
+    'version': 1,
+    'handlers': {'sentry': {'class': 'sentry_sdk.integrations.logging.EventHandler'}},
+    'loggers': {'': {'handlers': ['sentry'], 'level': 'ERROR'}},
+}
+
+# Generic 500 page for users
+handler500 = 'myapp.views.custom_500'</code></pre>
+                        </div>
+
+                        <h3>3. Hardened HTTP Headers</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">nginx</span><span>Secure</span></div>
+                            <pre><code>server {
+    listen 443 ssl http2;
+    server_name app.example.com;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'nonce-...'" always;
+    add_header Permissions-Policy "geolocation=(), microphone=()" always;
+
+    # Disable detailed server tokens
+    server_tokens off;
+    more_clear_headers Server;
+}</code></pre>
+                        </div>
+
+                        <h3>4. Disable Unnecessary Endpoints</h3>
+                        <p>For Spring Boot, lock down actuators:</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">application.properties</span><span>Secure</span></div>
+                            <pre><code># Only expose /health to anonymous users
+management.endpoints.web.exposure.include=health
+management.endpoint.health.show-details=never
+
+# For internal actuator endpoints, require authentication
+spring.security.user.name=${ACTUATOR_USER}
+spring.security.user.password=${ACTUATOR_PASSWORD}</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>How to Test for It</h2>
+                        <ol>
+                            <li><strong>Run a vulnerability scanner</strong> — Nessus, Qualys, or OpenVAS will find unpatched software and default creds.</li>
+                            <li><strong>Shodan / Censys</strong> — search for your own IPs and domains to see what's exposed.</li>
+                            <li><strong>Check the dev tools</strong> — is <code>DEBUG</code> on? Is the source map exposed? Are there <code>.git</code> folders?</li>
+                            <li><strong>Look for <code>.env</code>, <code>.git</code>, <code>composer.json</code>, <code>package.json</code></strong> in production paths.</li>
+                            <li><strong>Run an SSL Labs scan</strong> — grade your TLS config.</li>
+                            <li><strong>Test every known default credential</strong> on every interface.</li>
+                            <li><strong>Audit cloud storage permissions</strong> with tools like <code>ScoutSuite</code> or <code>Prowler</code>.</li>
+                        </ol>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>ScoutSuite / Prowler</h5><p>Multi-cloud security auditing. Find public S3 buckets, IAM issues, etc.</p></div>
+                            <div class="tool-card"><h5>Shodan</h5><p>Search engine for internet-connected devices. Find your own exposed stuff.</p></div>
+                            <div class="tool-card"><h5>SSL Labs</h5><p>Free online TLS configuration tester.</p></div>
+                            <div class="tool-card"><h5>Nessus Essentials</h5><p>Free vulnerability scanner for home/small business use.</p></div>
+                            <div class="tool-card"><h5>trivy / snyk</h5><p>Find unpatched software and vulnerable dependencies (covered in A06).</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Hardening Routine</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Repeatable, automated hardening process. Bake it into your Terraform / CloudFormation / Ansible.</li>
+                                <li>Disable any features you don't use (sample apps, debug consoles, default endpoints).</li>
+                                <li>Change all default credentials. Use a password manager to track them.</li>
+                                <li>Patch on a schedule — and patch critical CVEs within days, not months.</li>
+                                <li>Disable directory listings everywhere.</li>
+                                <li>Set custom error pages — never show stack traces in production.</li>
+                                <li>Block public access to all cloud storage by default; only enable it with intent.</li>
+                                <li>Set strict, security-focused HTTP response headers.</li>
+                                <li>Run a quarterly configuration audit using an automated scanner.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">20+</span></div>
+                        <div class="sidebar-info-row"><span class="label">Prevalence</span><span class="value">90%+ of apps</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Easy</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

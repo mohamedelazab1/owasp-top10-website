@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A02:2021 – Cryptographic Failures · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A02_2021-Cryptographic_Failures/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A02</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A02:2021</span>
+                <h1>Cryptographic Failures</h1>
+                <p class="lead">Previously known as "Sensitive Data Exposure," this category focuses on failures related to cryptography that lead to sensitive data exposure — weak algorithms, missing encryption, improper key management, or transmission of data in cleartext.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff easy">Difficulty: Easy</span>
+                    <div class="vuln-tags">
+                        <span class="tag">Back-end</span>
+                        <span class="tag">TLS/SSL</span>
+                        <span class="tag">Hashing</span>
+                        <span class="tag">Storage</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section id="real-incident">
+                        <h2>Real-World Incident</h2>
+                        <h3>Equifax Breach (2017) — 147 Million Records</h3>
+                        <p>The single biggest data breach in U.S. history at the time. Attackers exploited an <strong>Apache Struts vulnerability</strong> (CVE-2017-5638) to break into Equifax's dispute-resolution portal. They then moved laterally through the network, finding credentials and certificates stored in <strong>plaintext configuration files</strong>, allowing them to exfiltrate 147 million Americans' names, Social Security numbers, birth dates, addresses, and some driver's license numbers.</p>
+                        <p>Cost to Equifax: <strong>$1.4 billion</strong> in total expenses, plus the resignation of the CEO, CIO, and CSO.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>LinkedIn (2012)</strong> — 117 million passwords leaked because they were hashed with <strong>SHA-1</strong> (no salt, single iteration). Cracked in days.</li>
+                            <li><strong>Yahoo (2013–2014)</strong> — 3 billion accounts compromised. The "encrypted" passwords used <code>MD5</code> — broken in 2012.</li>
+                            <li><strong>Adobe (2013)</strong> — 153 million user records. Passwords encrypted with <code>3DES in ECB mode</code>, which preserves patterns. Worse, the same 3DES key was used for every user.</li>
+                            <li><strong>CloudBleed (2017)</strong> — Cloudflare's edge servers leaked sensitive data in HTTP responses for months due to a buffer overflow in their HTML parser, including private keys, cookies, and HTTPS request bodies.</li>
+                            <li><strong>Adult Friend Finder (2016)</strong> — 412 million accounts. Passwords stored using a weak SHA-1 variant. 99% of passwords were cracked within weeks.</li>
+                        </ul>
+                    </section>
+
+                    <section id="how-it-works">
+                        <h2>How It Works</h2>
+                        <p>Cryptographic failures happen in three broad ways:</p>
+
+                        <h3>1. Data in Transit Not Encrypted</h3>
+                        <p>The application uses HTTP instead of HTTPS, or uses HTTPS with weak ciphers. A network attacker (coffee shop Wi-Fi, hostile ISP) can read or modify all traffic.</p>
+
+                        <h3>2. Data at Rest Stored Insecurely</h3>
+                        <p>Sensitive data is stored in plaintext, with reversible "encryption" (Base64 is encoding, not encryption), or with weak algorithms like <code>MD5</code>, <code>SHA-1</code>, or <code>DES</code>.</p>
+
+                        <h3>3. Poor Password Hashing</h3>
+                        <p>Passwords are stored as plaintext, MD5/SHA-1 hashes (too fast — GPU can compute billions per second), or are hashed without a salt (enabling rainbow table attacks).</p>
+
+                        <h3>4. Improper Key Management</h3>
+                        <p>Encryption keys are hardcoded in source code, stored in the same database as the encrypted data, checked into Git, or never rotated.</p>
+
+                        <h3>5. Weak Random Number Generation</h3>
+                        <p>Session tokens, password reset links, and API keys generated with <code>Math.random()</code> or <code>java.util.Random</code> — both predictable. A <code>Math.random()</code> token can be brute-forced in minutes.</p>
+                    </section>
+
+                    <section id="vulnerable-code">
+                        <h2>Vulnerable Code Examples</h2>
+
+                        <h3>Example 1: Plaintext Password Storage (Node.js)</h3>
+                        <p>You'd be surprised how often this is still found.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript (Express)</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Storing the password as-is
+app.post('/register', async (req, res) => {
+    const user = {
+        email: req.body.email,
+        password: req.body.password  // plaintext in the database
+    };
+    await db.users.insert(user);
+    res.send('Registered');
+});</code></pre>
+                        </div>
+
+                        <h3>Example 2: MD5 Hashing (PHP)</h3>
+                        <p>MD5 is broken for password hashing. Modern GPUs compute ~50 billion MD5 hashes per second.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">PHP</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ MD5 without a salt
+$hash = md5($password);
+// Database is breached → attacker recovers every password in hours
+// Even with a salt, MD5 is far too fast for passwords</code></pre>
+                        </div>
+
+                        <h3>Example 3: HTTP Instead of HTTPS (Any Backend)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">nginx</span><span>Vulnerable</span></div>
+                            <pre><code>server {
+    listen 80;
+    server_name app.example.com;
+    # ❌ Serving the app over plain HTTP
+    # Login credentials and session cookies traverse the network in cleartext
+    root /var/www/app;
+}</code></pre>
+                        </div>
+
+                        <h3>Example 4: Predictable Token (JavaScript)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Math.random() is NOT cryptographically secure
+const resetToken = Math.random().toString(36).substring(2);
+// Attacker can predict the next "random" value if they observe a few
+// The PRNG state can be reconstructed from ~5 outputs</code></pre>
+                        </div>
+
+                        <h3>Example 5: Hardcoded Encryption Key (Python)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python</span><span>Vulnerable</span></div>
+                            <pre><code># ❌ Key in source code
+SECRET_KEY = "a7f8b2c1d9e0f1a2b3c4d5e6f7a8b9c0"
+
+def encrypt_card(card_number):
+    from Crypto.Cipher import AES
+    cipher = AES.new(SECRET_KEY, AES.MODE_ECB)
+    return cipher.encrypt(card_number)</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="attack-walkthrough">
+                        <h2>Real Attack Walkthrough — Cracking a Leaked MD5 Database</h2>
+                        <p>Imagine you have dumped a database with 1 million users, and the passwords are stored as <code>md5(password)</code> with no salt. Here's how an attacker would crack them.</p>
+
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <strong>Identify the hash type</strong>
+                                    <p>Use <code>hashid</code> or <code>hash-identifier</code> to confirm the algorithm. The 32-character hex string is MD5.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <strong>Get a wordlist</strong>
+                                    <p>Download <code>rockyou.txt</code> (14 million common passwords, ~133 MB). It comes from a real 2009 breach and is still devastatingly effective.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <strong>Run hashcat or John the Ripper</strong>
+                                    <p>On a single modern GPU, hashcat tests 50+ billion MD5 hashes per second against a wordlist. Rockyou is exhausted in seconds.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content">
+                                    <strong>Try rules and masks</strong>
+                                    <p>Append common mutations: <code>password1</code>, <code>Password!</code>, <code>p@ssw0rd</code>. Cracks another 30% of accounts.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content">
+                                    <strong>Credential stuffing</strong>
+                                    <p>Try the recovered email/password pairs on Gmail, banking, and other services. Most users reuse passwords.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Shell</span><span>Cracking with hashcat</span></div>
+                            <pre><code># Mode 0 = MD5, attack mode 0 = straight wordlist
+hashcat -m 0 -a 0 hashes.txt rockyou.txt
+
+# Output
+# 5f4dcc3b5aa765d61d8327deb882cf99:password
+# e10adc3949ba59abbe56e057f20f883e:123456
+# 25d55ad283aa400af464c76d713c07ad:12345678
+# 3,890,124 hashes recovered (out of 4,200,000) in 47 seconds</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="secure-code">
+                        <h2>Secure Code — The Fix</h2>
+
+                        <h3>1. Use bcrypt, scrypt, or Argon2 for passwords</h3>
+                        <p>These algorithms are intentionally slow, memory-hard, and automatically handle salting. They are the standard for password storage as of 2025.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>const bcrypt = require('bcrypt');
+
+// Cost factor 12 = ~250ms on modern hardware — slow enough to be safe
+const hash = await bcrypt.hash(password, 12);
+await db.users.insert({ email, password: hash });
+
+// Verify
+const ok = await bcrypt.compare(password, user.password);</code></pre>
+                        </div>
+
+                        <h3>2. Force HTTPS everywhere</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">nginx</span><span>Secure</span></div>
+                            <pre><code>server {
+    listen 80;
+    server_name app.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    ssl_protocols TLSv1.2 TLSv1.3;     # ✅ Modern TLS only
+    ssl_ciphers HIGH:!aNULL:!MD5;     # ✅ Disable weak ciphers
+    ssl_prefer_server_ciphers on;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+}</code></pre>
+                        </div>
+
+                        <h3>3. Use a cryptographically secure RNG</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Secure</span></div>
+                            <pre><code>// ✅ Browser
+const token = crypto.getRandomValues(new Uint8Array(32));
+const hex = Array.from(token, b => b.toString(16).padStart(2, '0')).join('');
+
+// ✅ Node.js
+const token = require('crypto').randomBytes(32).toString('hex');</code></pre>
+                        </div>
+
+                        <h3>4. Use a Key Management System (KMS)</h3>
+                        <p>Never hardcode keys. Use a KMS like AWS KMS, GCP Cloud KMS, Azure Key Vault, or HashiCorp Vault.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (with AWS KMS)</span><span>Secure</span></div>
+                            <pre><code>import boto3
+kms = boto3.client('kms')
+
+def encrypt_data(plaintext):
+    response = kms.encrypt(
+        KeyId='alias/my-app-key',
+        Plaintext=plaintext
+    )
+    return response['CiphertextBlob']
+
+# The actual encryption key never leaves the KMS service</code></pre>
+                        </div>
+
+                        <h3>5. Use modern authenticated encryption</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>// ✅ AES-256-GCM provides both confidentiality and integrity
+const crypto = require('crypto');
+
+function encrypt(plaintext, key) {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return Buffer.concat([iv, tag, enc]);
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="testing">
+                        <h2>How to Test for It</h2>
+                        <ol>
+                            <li><strong>Inspect every endpoint over HTTP and HTTPS</strong> — is the login form on HTTP? Is the API available on port 80?</li>
+                            <li><strong>Test the TLS configuration</strong> — use <a href="https://www.ssllabs.com/ssltest/" target="_blank" rel="noopener">SSL Labs</a> for a free, thorough scan. Look for old protocol versions, weak ciphers, and missing HSTS.</li>
+                            <li><strong>Check for sensitive data in cookies and storage</strong> — open DevTools, look for tokens, passwords, or PII in cookies or localStorage.</li>
+                            <li><strong>Test the password reset flow</strong> — is the reset token predictable? Can you use a token from one account to reset another?</li>
+                            <li><strong>Look for hardcoded secrets</strong> — grep the public source code, JS bundles, mobile app APKs, and Git history for keys and tokens.</li>
+                            <li><strong>Inspect the database schema</strong> — if you can, look at the type/length of password columns. MD5 is 32 hex chars; bcrypt is 60 chars starting with <code>$2</code>.</li>
+                        </ol>
+                    </section>
+
+                    <section id="tools">
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>SSL Labs</h5><p>Free online TLS configuration scanner.</p></div>
+                            <div class="tool-card"><h5>testssl.sh</h5><p>Command-line TLS scanner. Great for automation.</p></div>
+                            <div class="tool-card"><h5>hashcat</h5><p>The world's fastest password cracker. Use it to test your own password strength.</p></div>
+                            <div class="tool-card"><h5>git-secrets / trufflehog</h5><p>Scan Git repos for hardcoded secrets and credentials.</p></div>
+                            <div class="tool-card"><h5>Burp Suite / ZAP</h5><p>Inspect traffic, test for mixed content and weak cookies.</p></div>
+                        </div>
+                    </section>
+
+                    <section id="prevention">
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Modern Crypto Hygiene</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Classify data and apply controls based on sensitivity (PII, payment, health, etc.).</li>
+                                <li>Encrypt all data in transit with TLS 1.2+ (preferably 1.3). Redirect HTTP → HTTPS.</li>
+                                <li>Encrypt sensitive data at rest using authenticated encryption (AES-GCM, ChaCha20-Poly1305).</li>
+                                <li>Use bcrypt, scrypt, or Argon2 for password hashing. Never roll your own.</li>
+                                <li>Generate keys with a CSPRNG and store them in a KMS or HSM. Rotate regularly.</li>
+                                <li>Disable weak ciphers, MD5, SHA-1, DES, 3DES, RC4 in your stack.</li>
+                                <li>Set strong HTTP headers: HSTS, Secure/HttpOnly/SameSite cookies, Content-Security-Policy.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real-World Incident</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#testing">How to Test</a></li>
+                        <li><a href="#tools">Tools</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">29</span></div>
+                        <div class="sidebar-info-row"><span class="label">Biggest Example</span><span class="value">Equifax 2017</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Easy</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

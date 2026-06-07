@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A01:2021 – Broken Access Control · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span>OWASP<span class="logo-accent">Top10</span></span>
+            </a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="../index.html#difficulty">Difficulty</a></li>
+                <li><a href="https://owasp.org/Top10/A01_2021-Broken_Access_Control/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A01</span>
+            </div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A01:2021</span>
+                <h1>Broken Access Control</h1>
+                <p class="lead">Access control enforces policy such that users cannot act outside of their intended permissions. Failures typically lead to unauthorized information disclosure, modification, or destruction of data, or to a user performing a business function outside of their role.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff easy">Difficulty: Easy</span>
+                    <div class="vuln-tags">
+                        <span class="tag">Back-end</span>
+                        <span class="tag">IDOR</span>
+                        <span class="tag">Privilege Escalation</span>
+                        <span class="tag">Path Traversal</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section id="real-incident">
+                        <h2>Real-World Incident</h2>
+                        <h3>Facebook Photo Access Bug (CVE-2019-13615) — 2019</h3>
+                        <p>In September 2019, security researcher <strong>Imperva's Ron Masas</strong> disclosed a vulnerability in Facebook that allowed a malicious website to extract profile information, photos, and other data from any user — just by having them visit a page. The issue existed because Facebook's Graph API endpoint returned user data based on predictable identifiers sent in the request, with no proper per-request authorization check.</p>
+                        <p>The attack: a malicious page embedded a hidden <code>iframe</code> pointing to <code>https://graph.facebook.com/v3.0/{USER_ID}/photos</code>. When the victim was logged into Facebook, the browser auto-attached session cookies, and the endpoint returned the data. By brute-forcing the <code>USER_ID</code> (typically a public identifier), the attacker could enumerate the photos of any user.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>First American Financial (2019)</strong> — 885 million records of mortgage documents exposed via a sequential document ID in the URL. A simple <code>https://www.firstam.com/.../document?docID=000123</code> → <code>docID=000124</code> walk revealed every customer's data.</li>
+                            <li><strong>Instagram (2020)</strong> — Researchers received $30,000 from Facebook after chaining an IDOR with a guessable user ID to take over any Instagram account.</li>
+                            <li><strong>Snapchat (2019)</strong> — Allowed enumerating any user's phone number through a vulnerable <code>/api/v1/find_friends</code> endpoint.</li>
+                            <li><strong>Microsoft Power Apps (2021)</strong> — 47 million records exposed, including COVID-19 contact tracing data, because Power Apps portals exposed internal OData APIs to anonymous users by default.</li>
+                        </ul>
+
+                        <div class="callout danger">
+                            <div class="callout-title">🚨 Why It's #1</div>
+                            <p>34 CWEs mapped to Broken Access Control had more occurrences in applications than any other category. It includes the famous <strong>IDOR</strong> (Insecure Direct Object Reference) which remains the most commonly reported bug class on bug bounty platforms.</p>
+                        </div>
+                    </section>
+
+                    <section id="how-it-works">
+                        <h2>How It Works</h2>
+                        <p>Broken access control occurs when an application doesn't properly enforce <em>who can do what</em>. This manifests in several ways:</p>
+
+                        <h3>1. IDOR (Insecure Direct Object Reference)</h3>
+                        <p>The most common form. The application exposes a database key (user ID, order ID, file ID) in the URL, and relies on the user not changing it. A missing check on the server means anyone can view anyone else's data.</p>
+
+                        <h3>2. Vertical Privilege Escalation</h3>
+                        <p>A regular user accesses an admin-only endpoint, like <code>/admin/delete-user</code>, because the front-end hides the link but the back-end never checks the role.</p>
+
+                        <h3>3. Horizontal Privilege Escalation</h3>
+                        <p>User A accesses User B's data at the same privilege level (e.g., viewing another user's order history).</p>
+
+                        <h3>4. Missing Function-Level Access Control</h3>
+                        <p>An API endpoint exists that should require authentication, but it doesn't — anyone can call it.</p>
+
+                        <h3>5. Path / Directory Traversal</h3>
+                        <p>The application builds a file path using user input without sanitization, letting <code>../../../etc/passwd</code> read system files.</p>
+
+                        <h3>6. CORS Misconfiguration</h3>
+                        <p>The server responds with <code>Access-Control-Allow-Origin: *</code> (or reflects any origin) while also responding to authenticated requests, allowing cross-origin theft of data.</p>
+                    </section>
+
+                    <section id="vulnerable-code">
+                        <h2>Vulnerable Code Examples</h2>
+
+                        <h3>Example 1: IDOR on User Profile (Node.js/Express)</h3>
+                        <p>This is the classic Facebook-style IDOR. The endpoint accepts a user ID from the URL and returns the profile, but never checks that the requesting user is allowed to see it.</p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript (Express)</span>
+                                <span>Vulnerable</span>
+                            </div>
+                            <pre><code>// routes/user.js
+app.get('/api/users/:id/profile', async (req, res) => {
+    // ❌ BUG: just fetching any user by ID from the URL
+    const user = await db.users.findById(req.params.id);
+    if (!user) return res.status(404).send('Not found');
+
+    // Returning the full profile including SSN, email, address...
+    res.json(user);
+});</code></pre>
+                        </div>
+
+                        <h3>Example 2: Missing Admin Check (Python/Flask)</h3>
+                        <p>The front-end hides the "Delete User" button from non-admins, but the back-end endpoint doesn't verify the role.</p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">Python (Flask)</span>
+                                <span>Vulnerable</span>
+                            </div>
+                            <pre><code>@app.route('/admin/users/&lt;user_id&gt;/delete', methods=['POST'])
+def delete_user(user_id):
+    # ❌ BUG: no check that the current user is an admin
+    # The HTML doesn't show the button, but anyone can POST here
+    db.delete('users', id=user_id)
+    return {'status': 'ok'}</code></pre>
+                        </div>
+
+                        <h3>Example 3: Path Traversal (PHP)</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">PHP</span>
+                                <span>Vulnerable</span>
+                            </div>
+                            <pre><code>// download.php?file=invoice_1234.pdf
+$file = $_GET['file'];
+$path = "/var/www/uploads/" . $file;
+
+// ❌ BUG: attacker can request ?file=../../../../etc/passwd
+header("Content-Type: application/octet-stream");
+readfile($path);</code></pre>
+                        </div>
+
+                        <h3>Example 4: CORS Misconfiguration (Node.js)</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript (Express)</span>
+                                <span>Vulnerable</span>
+                            </div>
+                            <pre><code>// ❌ Reflecting any origin while allowing credentials
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    next();
+});</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="attack-walkthrough">
+                        <h2>Real Attack Walkthrough</h2>
+                        <p>Let's walk through how a bug bounty hunter would find and exploit an IDOR in a typical e-commerce application. This is based on actual patterns reported on HackerOne.</p>
+
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <strong>Reconnaissance</strong>
+                                    <p>Create two accounts (attacker: <code>evil@test.com</code>, victim: <code>victim@test.com</code>). Note your order IDs, profile IDs, and any other numeric/UUID identifiers in the URL.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <strong>Identify Object Reference</strong>
+                                    <p>Browse to <code>https://shop.example.com/orders/58271</code> while logged in as the attacker. The number <code>58271</code> is your order ID — likely just a database primary key.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <strong>Log in as victim in another browser</strong>
+                                    <p>Note the victim's order ID, e.g. <code>58272</code>. Both IDs are sequential integers — a strong signal of IDOR.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content">
+                                    <strong>Swap the ID</strong>
+                                    <p>As the attacker, visit <code>https://shop.example.com/orders/58272</code>. If you see the victim's order details, the application is vulnerable.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content">
+                                    <strong>Write a POC and report</strong>
+                                    <p>Use Burp Repeater to capture the exact request, document the response, and write a clear report. Many IDOR reports have earned $500–$10,000 in bounties.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3>The HTTP Request</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">HTTP</span>
+                                <span>Captured with Burp Repeater</span>
+                            </div>
+                            <pre><code>GET /api/orders/58272 HTTP/1.1
+Host: shop.example.com
+Cookie: session=ATTACKER_SESSION_TOKEN
+Authorization: Bearer eyJhbGciOi...
+
+# Response shows the VICTIM's order
+{
+  "order_id": 58272,
+  "user_email": "victim@test.com",
+  "items": [...],
+  "total": 199.99,
+  "address": "123 Victim Street..."
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="secure-code">
+                        <h2>Secure Code — The Fix</h2>
+
+                        <h3>1. Always enforce server-side authorization</h3>
+                        <p>Authentication (who you are) is not the same as authorization (what you can do). Both must be checked on every request — and the authorization check should not be in the front-end.</p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript (Express)</span>
+                                <span>Secure</span>
+                            </div>
+                            <pre><code>// Middleware that checks the user can access this resource
+async function authorizeOrderAccess(req, res, next) {
+    const order = await db.orders.findById(req.params.id);
+    if (!order) return res.status(404).send('Not found');
+
+    // ✅ Check that the order belongs to the requesting user
+    if (order.user_id !== req.user.id && req.user.role !== 'admin') {
+        return res.status(403).send('Forbidden');
+    }
+    req.order = order;
+    next();
+}
+
+app.get('/api/orders/:id', authenticate, authorizeOrderAccess, (req, res) => {
+    res.json(req.order);
+});</code></pre>
+                        </div>
+
+                        <h3>2. Use unpredictable identifiers</h3>
+                        <p>Where possible, use UUIDs or random tokens rather than sequential integers. This isn't a substitute for authorization, but it slows down mass enumeration.</p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">Python</span>
+                                <span>Secure</span>
+                            </div>
+                            <pre><code>import uuid
+# Generate per-record public IDs
+user.public_id = uuid.uuid4()
+
+# URL: /users/550e8400-e29b-41d4-a716-446655440000
+# Still MUST check ownership server-side</code></pre>
+                        </div>
+
+                        <h3>3. Fix path traversal</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">PHP</span>
+                                <span>Secure</span>
+                            </div>
+                            <pre><code>// Whitelist approach: only allow known file names
+$allowed = ['invoice_1234.pdf', 'receipt_5678.pdf'];
+if (!in_array($_GET['file'], $allowed, true)) {
+    http_response_code(400);
+    exit('Invalid file');
+}
+
+// Or resolve and check the final path is inside the upload dir
+$base = '/var/www/uploads/';
+$path = realpath($base . basename($_GET['file']));
+if ($path === false || !str_starts_with($path, $base)) {
+    http_response_code(400);
+    exit('Invalid file');
+}
+readfile($path);</code></pre>
+                        </div>
+
+                        <h3>4. Lock down CORS</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-lang">JavaScript (Express)</span>
+                                <span>Secure</span>
+                            </div>
+                            <pre><code>const ALLOWED_ORIGINS = ['https://app.example.com'];
+
+// ✅ Reflect only known, trusted origins
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin');
+    }
+    next();
+});</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="testing">
+                        <h2>How to Test for It</h2>
+                        <ol>
+                            <li><strong>Map every endpoint</strong> — use Burp Suite's Target tab to list all routes the application exposes.</li>
+                            <li><strong>Identify the authorization model</strong> — what roles exist? What's the difference between an admin and a regular user?</li>
+                            <li><strong>Create two test accounts</strong> — one for each role level you want to compare.</li>
+                            <li><strong>For every endpoint, swap identifiers</strong> — change user IDs, order IDs, document IDs, file names from Account A to Account B.</li>
+                            <li><strong>Try accessing admin endpoints as a regular user</strong> — directly visit <code>/admin</code>, <code>/api/admin/users</code>, etc.</li>
+                            <li><strong>Test with tampered tokens</strong> — try a request with no <code>Authorization</code> header, then with a malformed one, then with a token from a different user.</li>
+                            <li><strong>Fuzz parameters</strong> — try <code>../</code>, <code>%2e%2e%2f</code>, <code>....//</code> in any parameter that might end up in a file path.</li>
+                            <li><strong>Test CORS</strong> — send a request with <code>Origin: https://evil.com</code> and see if the server reflects it while also returning sensitive data.</li>
+                        </ol>
+                    </section>
+
+                    <section id="tools">
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card">
+                                <h5>Burp Suite</h5>
+                                <p>The de-facto web proxy. Use Repeater, Intruder, and the Autorize extension for access control testing.</p>
+                            </div>
+                            <div class="tool-card">
+                                <h5>Autorize (Burp Plugin)</h5>
+                                <p>Automatically replays your authenticated requests with a low-privileged session to detect missing checks.</p>
+                            </div>
+                            <div class="tool-card">
+                                <h5>ffuf</h5>
+                                <p>Fast web fuzzer — great for enumerating sequential IDs to find IDOR quickly.</p>
+                            </div>
+                            <div class="tool-card">
+                                <h5>Postman</h5>
+                                <p>For manual API testing. Save and replay requests across different user contexts.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="real-cases">
+                        <h2>Real CVEs &amp; Bug Bounty Cases</h2>
+                        <table class="ref-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Year</th>
+                                    <th>What Happened</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>CVE-2019-13615</td>
+                                    <td>2019</td>
+                                    <td>Facebook graph API IDOR — extracted user photos via cross-origin iframe.</td>
+                                </tr>
+                                <tr>
+                                    <td>First American Financial</td>
+                                    <td>2019</td>
+                                    <td>885M mortgage records exposed via sequential document ID in URL.</td>
+                                </tr>
+                                <tr>
+                                    <td>Instagram Takeover</td>
+                                    <td>2020</td>
+                                    <td>Account takeover via IDOR + guessable user ID ($30,000 bounty).</td>
+                                </tr>
+                                <tr>
+                                    <td>Microsoft Power Apps</td>
+                                    <td>2021</td>
+                                    <td>47M records exposed by anonymous OData API access.</td>
+                                </tr>
+                                <tr>
+                                    <td>CVE-2021-31589</td>
+                                    <td>2021</td>
+                                    <td>sudo Baron Samedit — privileged users could escalate to root (Unix, not web, but famous example of privilege escalation).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="prevention">
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Defense in Depth</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Implement authorization checks server-side on <strong>every</strong> request — never trust the client.</li>
+                                <li>Use a single, consistent authorization mechanism (e.g., a middleware that checks roles and ownership).</li>
+                                <li>Disable directory listings and ensure static files don't accidentally expose data.</li>
+                                <li>Log all access control failures and alert on patterns (e.g., the same IP triggering 100 403s in a minute).</li>
+                                <li>Use rate limiting on APIs to slow down enumeration attempts.</li>
+                                <li>For multi-tenant systems, include the tenant ID in the authorization check, not just the user ID.</li>
+                                <li>Test with the Autorize extension on every release.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real-World Incident</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#testing">How to Test</a></li>
+                        <li><a href="#tools">Tools</a></li>
+                        <li><a href="#real-cases">Real CVEs</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row">
+                            <span class="label">CWE Count</span>
+                            <span class="value">34</span>
+                        </div>
+                        <div class="sidebar-info-row">
+                            <span class="label">Avg. Bounty</span>
+                            <span class="value">$500–$10k</span>
+                        </div>
+                        <div class="sidebar-info-row">
+                            <span class="label">Difficulty</span>
+                            <span class="value">Easy</span>
+                        </div>
+                        <div class="sidebar-info-row">
+                            <span class="label">Where</span>
+                            <span class="value">Back-end</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>© 2025 OWASP Top 10 Educational Project · Released under MIT License</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

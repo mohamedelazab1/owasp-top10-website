@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP Top 10 Web Security - Real World Scenarios</title>
+    <meta name="description" content="A comprehensive educational resource for learning OWASP Top 10 web application vulnerabilities through real-world scenarios, CVEs, and bug bounty reports.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span>OWASP<span class="logo-accent">Top10</span></span>
+            </a>
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="#difficulty">Difficulty Map</a></li>
+                <li><a href="#resources">Resources</a></li>
+                <li><a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">Official OWASP ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-bg"></div>
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge">OWASP Top 10 : 2021</span>
+                <h1>Web Security <span class="gradient-text">Vulnerabilities</span></h1>
+                <p class="hero-subtitle">Learn how real attackers exploit real applications. A hands-on educational resource covering the 10 most critical web security risks — sorted by difficulty, with front-end and back-end perspectives, real CVE references, and bug bounty case studies.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Vulnerabilities</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">40+</span>
+                        <span class="stat-label">Real CVEs</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">25+</span>
+                        <span class="stat-label">Bug Bounty Cases</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Educational</span>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a href="#vulnerabilities" class="btn btn-primary">Start Learning</a>
+                    <a href="https://github.com/mohamedelazab1/owasp-top10-website" target="_blank" rel="noopener" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section" id="difficulty">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Difficulty Map</span>
+                    <h2>From Beginner to Expert</h2>
+                    <p>Each vulnerability is rated based on how easy it is to discover and exploit. Start with the green ones and work your way up.</p>
+                </div>
+                <div class="difficulty-legend">
+                    <div class="legend-item easy">
+                        <span class="legend-dot"></span>
+                        <div>
+                            <strong>Easy</strong>
+                            <span>Beginner friendly — found with basic tools, often by accident.</span>
+                        </div>
+                    </div>
+                    <div class="legend-item medium">
+                        <span class="legend-dot"></span>
+                        <div>
+                            <strong>Medium</strong>
+                            <span>Requires understanding of HTTP, sessions, and basic scripting.</span>
+                        </div>
+                    </div>
+                    <div class="legend-item hard">
+                        <span class="legend-dot"></span>
+                        <div>
+                            <strong>Hard</strong>
+                            <span>Requires deep protocol knowledge, chained exploits, and creativity.</span>
+                        </div>
+                    </div>
+                    <div class="legend-item expert">
+                        <span class="legend-dot"></span>
+                        <div>
+                            <strong>Expert</strong>
+                            <span>Multi-step, business-logic flaws, race conditions, or novel research.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section vulnerabilities-section" id="vulnerabilities">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">The Top 10</span>
+                    <h2>All Vulnerabilities</h2>
+                    <p>Click any card to dive deep into the vulnerability — real incidents, vulnerable code, attack walkthroughs, and secure fixes.</p>
+                </div>
+
+                <div class="filter-bar">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="easy">Easy</button>
+                    <button class="filter-btn" data-filter="medium">Medium</button>
+                    <button class="filter-btn" data-filter="hard">Hard</button>
+                    <button class="filter-btn" data-filter="expert">Expert</button>
+                    <button class="filter-btn" data-filter="frontend">Front-end</button>
+                    <button class="filter-btn" data-filter="backend">Back-end</button>
+                </div>
+
+                <div class="vuln-grid" id="vulnGrid">
+                    <article class="vuln-card easy" data-difficulty="easy" data-side="backend" data-rank="1">
+                        <a href="pages/a01-broken-access-control.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A01</span>
+                                <span class="vuln-diff easy">Easy</span>
+                            </div>
+                            <h3>Broken Access Control</h3>
+                            <p>Users can act outside their intended permissions — viewing others' data, accessing admin panels, or escalating privileges.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Backend</span>
+                                <span class="tag">IDOR</span>
+                                <span class="tag">PrivEsc</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">CVE-2021-31589</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card easy" data-difficulty="easy" data-side="backend" data-rank="2">
+                        <a href="pages/a02-cryptographic-failures.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A02</span>
+                                <span class="vuln-diff easy">Easy</span>
+                            </div>
+                            <h3>Cryptographic Failures</h3>
+                            <p>Weak, missing, or improperly implemented encryption exposing sensitive data at rest, in transit, or in processing.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Backend</span>
+                                <span class="tag">TLS</span>
+                                <span class="tag">Hashing</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Equifax 2017</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card easy" data-difficulty="easy" data-side="backend" data-rank="3">
+                        <a href="pages/a03-injection.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A03</span>
+                                <span class="vuln-diff easy">Easy</span>
+                            </div>
+                            <h3>Injection</h3>
+                            <p>Untrusted data is sent to an interpreter as part of a command or query — SQL, NoSQL, OS, LDAP, and template injection.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Backend</span>
+                                <span class="tag">SQLi</span>
+                                <span class="tag">XSS</span>
+                                <span class="tag">Command</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">TalkTalk 2015</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card medium" data-difficulty="medium" data-side="frontend" data-rank="4">
+                        <a href="pages/a04-insecure-design.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A04</span>
+                                <span class="vuln-diff medium">Medium</span>
+                            </div>
+                            <h3>Insecure Design</h3>
+                            <p>Missing or ineffective control designs at the architecture level — flaws that no perfect implementation could fix.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Design</span>
+                                <span class="tag">Business Logic</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Parler 2021</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card easy" data-difficulty="easy" data-side="backend" data-rank="5">
+                        <a href="pages/a05-security-misconfiguration.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A05</span>
+                                <span class="vuln-diff easy">Easy</span>
+                            </div>
+                            <h3>Security Misconfiguration</h3>
+                            <p>Default settings, open cloud storage, verbose errors, missing patches, or unprotected files &amp; directories.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Backend</span>
+                                <span class="tag">Cloud</span>
+                                <span class="tag">Defaults</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Capital One 2019</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card medium" data-difficulty="medium" data-side="backend" data-rank="6">
+                        <a href="pages/a06-vulnerable-components.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A06</span>
+                                <span class="vuln-diff medium">Medium</span>
+                            </div>
+                            <h3>Vulnerable &amp; Outdated Components</h3>
+                            <p>Using libraries, frameworks, or runtimes with known vulnerabilities — or failing to scan and patch them.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">SCA</span>
+                                <span class="tag">Dependencies</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Equifax Apache Struts</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card medium" data-difficulty="medium" data-side="backend" data-rank="7">
+                        <a href="pages/a07-auth-failures.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A07</span>
+                                <span class="vuln-diff medium">Medium</span>
+                            </div>
+                            <h3>Identification &amp; Auth Failures</h3>
+                            <p>Weak login flows, broken credential recovery, missing MFA, session hijacking, and exposed session tokens.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">Auth</span>
+                                <span class="tag">Sessions</span>
+                                <span class="tag">MFA</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">CVE-2017-9805</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card hard" data-difficulty="hard" data-side="backend" data-rank="8">
+                        <a href="pages/a08-integrity-failures.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A08</span>
+                                <span class="vuln-diff hard">Hard</span>
+                            </div>
+                            <h3>Software &amp; Data Integrity Failures</h3>
+                            <p>Trusting plugins, auto-updates, CI/CD pipelines, or deserialized data without verifying integrity.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">CI/CD</span>
+                                <span class="tag">Deserialization</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">SolarWinds 2020</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card hard" data-difficulty="hard" data-side="backend" data-rank="9">
+                        <a href="pages/a09-logging-monitoring.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A09</span>
+                                <span class="vuln-diff hard">Hard</span>
+                            </div>
+                            <h3>Security Logging &amp; Monitoring Failures</h3>
+                            <p>Insufficient logging, missing alerts, and inability to investigate or respond to incidents in time.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">SIEM</span>
+                                <span class="tag">IR</span>
+                                <span class="tag">Detection</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Target 2013</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <article class="vuln-card expert" data-difficulty="expert" data-side="backend" data-rank="10">
+                        <a href="pages/a10-ssrf.html" class="vuln-link">
+                            <div class="vuln-header">
+                                <span class="vuln-id">A10</span>
+                                <span class="vuln-diff expert">Expert</span>
+                            </div>
+                            <h3>Server-Side Request Forgery (SSRF)</h3>
+                            <p>The server fetches a remote resource based on user input — letting attackers pivot into internal networks and cloud metadata.</p>
+                            <div class="vuln-meta">
+                                <span class="tag">SSRF</span>
+                                <span class="tag">Cloud Metadata</span>
+                                <span class="tag">Internal Pivot</span>
+                            </div>
+                            <div class="vuln-footer">
+                                <span class="cve-ref">Capital One 2019</span>
+                                <span class="arrow">→</span>
+                            </div>
+                        </a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section frontend-vs-backend">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Two Sides of the Same Coin</span>
+                    <h2>Front-end vs. Back-end</h2>
+                    <p>Every vulnerability has an attack surface on the client, the server, or — most dangerously — both.</p>
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-card frontend">
+                        <div class="comparison-icon">🖥️</div>
+                        <h3>Front-end (Client-side)</h3>
+                        <p>Vulnerabilities that live in the browser, DOM, JavaScript, and what the user controls.</p>
+                        <ul>
+                            <li><strong>XSS</strong> — Stored, Reflected, DOM-based</li>
+                            <li><strong>CSRF</strong> — Cross-site request forgery</li>
+                            <li><strong>Clickjacking</strong> — UI redress attacks</li>
+                            <li><strong>DOM-based issues</strong> — Insecure JS sinks &amp; sources</li>
+                            <li><strong>Insecure storage</strong> — Tokens in localStorage</li>
+                            <li><strong>Open redirects</strong> — Trust boundary issues</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card backend">
+                        <div class="comparison-icon">⚙️</div>
+                        <h3>Back-end (Server-side)</h3>
+                        <p>Vulnerabilities that live on the server, in the database, and in the business logic.</p>
+                        <ul>
+                            <li><strong>SQLi</strong> — Database compromise</li>
+                            <li><strong>RCE</strong> — Remote code execution</li>
+                            <li><strong>SSRF</strong> — Internal network access</li>
+                            <li><strong>IDOR</strong> — Broken access control</li>
+                            <li><strong>Deserialization</strong> — Object injection</li>
+                            <li><strong>Auth bypass</strong> — Broken authentication</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section resources-section" id="resources">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Learn More</span>
+                    <h2>Resources &amp; References</h2>
+                    <p>Real-world sources for further learning — CVEs, bug bounty reports, and free labs.</p>
+                </div>
+                <div class="resources-grid">
+                    <a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener" class="resource-card">
+                        <h4>OWASP Official Top 10</h4>
+                        <p>The canonical reference maintained by the Open Worldwide Application Security Project.</p>
+                    </a>
+                    <a href="https://portswigger.net/web-security" target="_blank" rel="noopener" class="resource-card">
+                        <h4>PortSwigger Web Security Academy</h4>
+                        <p>Free, hands-on labs by the makers of Burp Suite — the gold standard for learning.</p>
+                    </a>
+                    <a href="https://hackerone.com/hacktivity" target="_blank" rel="noopener" class="resource-card">
+                        <h4>HackerOne Hacktivity</h4>
+                        <p>Public bug bounty reports — see how real researchers found real flaws.</p>
+                    </a>
+                    <a href="https://cve.mitre.org/" target="_blank" rel="noopener" class="resource-card">
+                        <h4>CVE Database</h4>
+                        <p>Search real Common Vulnerabilities and Exposures by keyword or vendor.</p>
+                    </a>
+                    <a href="https://github.com/swisskyrepo/PayloadsAllTheThings" target="_blank" rel="noopener" class="resource-card">
+                        <h4>PayloadsAllTheThings</h4>
+                        <p>Community-driven list of payloads and bypasses for every vulnerability class.</p>
+                    </a>
+                    <a href="https://tryhackme.com/" target="_blank" rel="noopener" class="resource-card">
+                        <h4>TryHackMe</h4>
+                        <p>Gamified, guided labs perfect for beginners learning web app security.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section disclaimer-section">
+            <div class="container">
+                <div class="disclaimer">
+                    <h3>⚠️ Ethical Use Only</h3>
+                    <p>This site is for <strong>education and defensive security</strong>. All scenarios are based on publicly disclosed incidents, CVEs, and bug bounty reports. Never test these techniques against systems you don't own or have explicit written permission to test. Unauthorized access is illegal under laws like the CFAA (US), Computer Misuse Act (UK), and equivalents worldwide.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h4>🛡️ OWASP Top 10 Learning</h4>
+                    <p>An open-source educational resource for web application security.</p>
+                </div>
+                <div>
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#vulnerabilities">All Vulnerabilities</a></li>
+                        <li><a href="#difficulty">Difficulty Map</a></li>
+                        <li><a href="#resources">Resources</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Official</h4>
+                    <ul>
+                        <li><a href="https://owasp.org" target="_blank" rel="noopener">OWASP.org</a></li>
+                        <li><a href="https://github.com/mohamedelazab1/owasp-top10-website" target="_blank" rel="noopener">GitHub Repo</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 OWASP Top 10 Educational Project. Released under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

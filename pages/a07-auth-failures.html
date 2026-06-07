@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A07:2021 – Identification &amp; Authentication Failures · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A07</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A07:2021</span>
+                <h1>Identification &amp; Authentication Failures</h1>
+                <p class="lead">Confirmation of the user's identity, authentication, and session management is critical. Failures can lead to stolen accounts, session hijacking, password cracking, and account takeover.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff medium">Difficulty: Medium</span>
+                    <div class="vuln-tags">
+                        <span class="tag">Auth</span>
+                        <span class="tag">Sessions</span>
+                        <span class="tag">MFA Bypass</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Microsoft Storm-0558 (2023) — Outlook &amp; Exchange</h3>
+                        <p>Chinese state-sponsored attackers <strong>forged authentication tokens</strong> by stealing a Microsoft signing key. The single key was trusted across consumer Microsoft accounts (Outlook.com, Live.com) and corporate ones (Azure AD). For over a month, attackers accessed the emails of ~25 organizations, including U.S. State and Commerce Departments. Root cause: a misconfigured consumer signing system that didn't enforce its audit logs and let an MSA key sign into enterprise environments.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>LastPass (2022)</strong> — Encrypted password vaults were stolen after attackers compromised a senior DevOps engineer's home computer. Customer master passwords were then cracked using brute force on the stolen encrypted vaults.</li>
+                            <li><strong>Twitter Account Takeover (2020)</strong> — A 17-year-old socially engineered a Twitter employee into providing admin tools access. Result: takeover of Barack Obama, Joe Biden, Elon Musk, Apple, and other high-profile accounts to promote a Bitcoin scam.</li>
+                            <li><strong>GitHub OAuth Tokens (2022)</strong> — Heroku and Travis-CI had their GitHub OAuth tokens compromised via a stolen GitHub integration. Cascade to the entire customer base.</li>
+                            <li><strong>Okta Support System Breach (2022-2023)</strong> — Threat actors accessed Okta's support case management system, exposing sensitive files (HAR files, session tokens) that could be replayed to access customer environments.</li>
+                            <li><strong>Samsung Breach (2022)</strong> — Lapsus$ group used a compromised employee's session token to gain access to internal Samsung systems. The token was obtained from a previous breach and reused.</li>
+                            <li><strong>Yokogawa (2022)</strong> — A flaw in the password reset flow allowed attackers to take over accounts without knowing the old password.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works</h2>
+                        <h3>1. Weak Password Policies</h3>
+                        <p>Allowing "password" as a password. No minimum length. No breach-database check.</p>
+
+                        <h3>2. Credential Stuffing &amp; Brute Force</h3>
+                        <p>No rate limiting, no CAPTCHA, no account lockout. Attackers throw 100M credential pairs at the login.</p>
+
+                        <h3>3. Session Token Mishandling</h3>
+                        <p>Sessions that don't expire. Tokens in URLs (leaked in Referer headers and logs). Tokens accepted from any IP after issuance.</p>
+
+                        <h3>4. Predictable Session IDs</h3>
+                        <p>Sequential or guessable session tokens. The attacker just enumerates.</p>
+
+                        <h3>5. MFA Bypass</h3>
+                        <p>The "remember this device" checkbox is permanent. The backup code is just another static secret. The push notification can be approved from an unattended phone.</p>
+
+                        <h3>6. Insecure Password Reset</h3>
+                        <p>Reset tokens that don't expire, can be reused, or are sent over plaintext email. "Security questions" with answers that are public (mother's maiden name, first pet).</p>
+
+                        <h3>7. Username Enumeration</h3>
+                        <p>Different error messages for "wrong email" vs "wrong password" let attackers enumerate which emails have accounts.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Code Examples</h2>
+
+                        <h3>Example 1: No Rate Limiting on Login</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ No rate limiting, no lockout, no CAPTCHA
+app.post('/login', async (req, res) => {
+    const user = await db.users.findOne({ email: req.body.email });
+    if (user && await bcrypt.compare(req.body.password, user.password)) {
+        req.session.userId = user.id;
+        res.send('ok');
+    } else {
+        res.status(401).send('Invalid email or password');
+        // ❌ Same response either way → can't tell if email exists (good!)
+        // ❌ But no rate limit → attacker tries 10k passwords/minute
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>Example 2: Insecure Password Reset (No Expiry, No Single-Use)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Reset token never expires
+app.post('/forgot-password', async (req, res) => {
+    const token = Math.random().toString(36).substring(2);  // Predictable!
+    await db.users.updateOne(
+        { email: req.body.email },
+        { $set: { resetToken: token } }
+    );
+    await email.send(req.body.email, `Reset: /reset?token=${token}`);
+    res.send('Sent');
+});
+
+app.post('/reset-password', async (req, res) => {
+    const user = await db.users.findOne({ resetToken: req.body.token });
+    // ❌ No check that the token has expired
+    // ❌ No check that it has been used before
+    // ❌ Same token can reset the same account again from another browser
+    if (user) {
+        user.password = await bcrypt.hash(req.body.password, 12);
+        // ❌ Forgot to clear resetToken → can be reused forever
+        await user.save();
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>Example 3: Username Enumeration</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Different responses leak which emails are registered
+app.post('/login', async (req, res) => {
+    const user = await db.users.findOne({ email: req.body.email });
+    if (!user) return res.status(404).send('No account with that email');
+    if (!await bcrypt.compare(req.body.password, user.password)) {
+        return res.status(401).send('Wrong password');
+    }
+    res.send('ok');
+});
+// Attacker can use this to build a list of valid emails for phishing</code></pre>
+                        </div>
+
+                        <h3>Example 4: Session Token in URL</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Session token in URL
+app.get('/dashboard', (req, res) => {
+    const sessionId = req.query.sid;
+    // If the user shares a link to a friend, or visits an external site,
+    // the session ID can leak in the Referer header or web server logs.
+    req.session = db.sessions.findOne({ id: sessionId });
+    res.render('dashboard');
+});</code></pre>
+                        </div>
+
+                        <h3>Example 5: MFA Bypass via "Remember Me"</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">JavaScript</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ The "remember this device" cookie lasts forever
+function setRememberDevice(res) {
+    res.cookie('mfa_skip', 'yes', {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 100  // 100 years!
+    });
+}
+// Attacker who steals this cookie (via XSS, malware, or shared computer)
+// can skip MFA permanently.</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Credential Stuffing</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Acquire a credential list</strong><p>Download a breach database — "Collection #1" (2.7B records), or buy a "combo list" on the dark web.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Set up a credential-stuffing tool</strong><p><code>OpenBullet 2</code> (now-defunct, sadly still used in the wild) or <code>Hydra</code>. They run thousands of attempts per minute through residential proxies to avoid IP blocks.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Filter for successes</strong><p>Look for HTTP 200 responses (login successful). Triage by account value (admin emails, emails at <code>@target.com</code>).</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Pivot</strong><p>Log in to the target's other services using the same password. Send phishing from the compromised email. Wire-transfer money from financial accounts.</p></div>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">CLI</span><span>Hydra example</span></div>
+                            <pre><code># Brute force / credential stuffing login
+hydra -L emails.txt -P passwords.txt target.com http-post-form \
+  "/login:email=^USER^&password=^PASS^:F=Invalid password" -t 64
+
+# -L: file of usernames
+# -P: file of passwords (or combo list)
+# -t 64: 64 parallel connections
+# F=: pattern that means "this is a failure"
+# Hydra will report any successful combination.</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Authentication</h2>
+
+                        <h3>1. Strong Login Flow</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 10,                     // 10 attempts per IP
+    skipSuccessfulRequests: true,
+});
+
+app.post('/login', loginLimiter, async (req, res) => {
+    const user = await db.users.findOne({ email: req.body.email });
+    // ✅ Always run bcrypt even if user doesn't exist
+    //    → prevents user enumeration via timing
+    const dummy = '$2b$12$..invalidsaltinvalidsaltinvalidsa..';
+    const hash = user ? user.password : dummy;
+    const ok = await bcrypt.compare(req.body.password, hash);
+
+    if (user && ok) {
+        // ✅ Regenerate session ID on login (prevents session fixation)
+        req.session.regenerate(() => {
+            req.session.userId = user.id;
+            res.send('ok');
+        });
+    } else {
+        // ✅ Generic error message — same for "no user" and "wrong password"
+        res.status(401).send('Invalid email or password');
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>2. Secure Password Reset</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>const crypto = require('crypto');
+
+app.post('/forgot-password', async (req, res) => {
+    // ✅ CSPRNG token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 15 * 60 * 1000);  // 15 minutes
+
+    await db.users.updateOne(
+        { email: req.body.email },
+        { $set: { resetToken: token, resetExpires: expires } }
+    );
+
+    // ✅ Always return the same response — don't leak whether email exists
+    res.send('If an account with that email exists, a reset link has been sent.');
+
+    // Send asynchronously
+    if (email) await email.send(req.body.email, `Reset: /reset?token=${token}`);
+});
+
+app.post('/reset-password', async (req, res) => {
+    const user = await db.users.findOne({
+        resetToken: req.body.token,
+        resetExpires: { $gt: new Date() }   // ✅ Expired tokens rejected
+    });
+    if (!user) return res.status(400).send('Invalid or expired link');
+
+    user.password = await bcrypt.hash(req.body.password, 12);
+    user.resetToken = null;                  // ✅ Single-use
+    user.resetExpires = null;
+    await user.save();
+
+    // ✅ Invalidate all other sessions for safety
+    await db.sessions.deleteMany({ userId: user.id });
+    res.send('Password reset. Please log in.');
+});</code></pre>
+                        </div>
+
+                        <h3>3. Secure Session Cookies</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Express (cookie-session)</span><span>Secure</span></div>
+                            <pre><code>app.use(session({
+    name: 'sid',
+    secret: process.env.SESSION_SECRET,  // Strong secret, rotated regularly
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,                  // ✅ Not readable from JS
+        secure: true,                    // ✅ HTTPS only
+        sameSite: 'lax',                 // ✅ CSRF protection
+        maxAge: 1000 * 60 * 30          // ✅ 30-minute timeout
+    }
+}));</code></pre>
+                        </div>
+
+                        <h3>4. MFA Done Right</h3>
+                        <ul>
+                            <li>Use TOTP (RFC 6238) or WebAuthn / passkeys. SMS is the worst — vulnerable to SIM swapping.</li>
+                            <li>"Remember this device" should be a short-lived signed cookie (e.g., 30 days), not a permanent one.</li>
+                            <li>Always require MFA for sensitive actions: changing password, changing email, viewing API keys, large transactions.</li>
+                            <li>Use number-matching for push notifications (Microsoft, Duo, Okta all do this now).</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>Hydra / Patator</h5><p>Network login brute forcers. Use to test your own login forms.</p></div>
+                            <div class="tool-card"><h5>Burp Intruder</h5><p>Wordlist-based attacks on web login forms with throttling and analysis.</p></div>
+                            <div class="tool-card"><h5>Have I Been Pwned API</h5><p>Free API to check if a password is in a known breach.</p></div>
+                            <div class="tool-card"><h5>2FA simulators</h5><p>Test that your MFA implementation actually works as designed.</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Authentication Hardening</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Enforce a minimum password length (12+ chars) and check against known breach lists.</li>
+                                <li>Rate limit login, password reset, and MFA endpoints. Lock out after N attempts.</li>
+                                <li>Use generic error messages that don't leak which emails exist.</li>
+                                <li>Always run password verification (even with dummy hashes) to prevent timing attacks.</li>
+                                <li>Regenerate session IDs on login. Set idle timeouts (15-30 min) and absolute timeouts (1-7 days).</li>
+                                <li>Use <code>httpOnly</code>, <code>secure</code>, <code>sameSite=lax</code> (or <code>strict</code>) cookies.</li>
+                                <li>Require MFA for sensitive accounts and actions.</li>
+                                <li>Issue cryptographically random, single-use, time-limited reset tokens.</li>
+                                <li>Centralize identity (Auth0, Okta, Cognito, Keycloak) when feasible.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">22</span></div>
+                        <div class="sidebar-info-row"><span class="label">Top Example</span><span class="value">Storm-0558</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Medium</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

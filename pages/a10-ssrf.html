@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A10:2021 – Server-Side Request Forgery (SSRF) · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A10</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A10:2021</span>
+                <h1>Server-Side Request Forgery (SSRF)</h1>
+                <p class="lead">SSRF flaws occur whenever a web application is fetching a remote resource without validating the user-supplied URL. The attacker can coerce the server to send a request to an unexpected destination — often inside the internal network or cloud metadata service.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff expert">Difficulty: Expert</span>
+                    <div class="vuln-tags">
+                        <span class="tag">SSRF</span>
+                        <span class="tag">Cloud Metadata</span>
+                        <span class="tag">Internal Pivot</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Capital One Breach (2019) — 100M Records via AWS Metadata</h3>
+                        <p>A former AWS employee exploited a Server-Side Request Forgery in Capital One's web application firewall. By sending <code>http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name</code> as a URL to the vulnerable endpoint, the application made a request to the AWS Instance Metadata Service from the EC2 instance. The instance's IAM role had overly broad permissions — granting access to 100 million S3 objects containing customer data.</p>
+                        <p>The breach cost Capital One <strong>$190 million</strong> in settlements. The same SSRF pattern has been found in dozens of other AWS-hosted applications.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Uber Breach (2016)</strong> — SSRF in a marketing site hit <code>http://169.254.169.254/...</code> on the company's cloud instance, dumping credentials. 57 million driver records stolen.</li>
+                            <li><strong>GitHub Enterprise (2017)</strong> — Internal server-side request forgery could read internal files and services. Patched within hours of disclosure.</li>
+                            <li><strong>Microsoft Power Apps (2021)</strong> — The OData API allowed anonymous users to query internal data sources (see A01). Some endpoints were reachable via SSRF.</li>
+                            <li><strong>Shopify Bug Bounty (multiple)</strong> — Researchers consistently find SSRF in Shopify's product image proxy. Several paid $10k-$25k bounties.</li>
+                            <li><strong>CloudBleed-related</strong> — Some CloudFlare features that fetched user-supplied URLs were vulnerable to internal SSRF.</li>
+                            <li><strong>Yahoo (2014)</strong> — Image processing servers had SSRF; the attacker could access internal admin panels.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works</h2>
+                        <h3>The Basic Pattern</h3>
+                        <p>Anywhere an application fetches a remote resource based on user input, you have an SSRF candidate:</p>
+                        <ul>
+                            <li>Image / avatar / favicon proxy: <code>https://app.com/proxy?url={user-url}</code></li>
+                            <li>PDF generation from URL: <code>https://app.com/render?url={page}</code></li>
+                            <li>Webhook testing: <code>https://app.com/check?url={webhook}</code></li>
+                            <li>Import from URL: <code>https://app.com/import?url={feed}</code></li>
+                            <li>OAuth / OIDC callbacks (less common but devastating)</li>
+                        </ul>
+
+                        <h3>The Three Targets of an SSRF</h3>
+                        <ol>
+                            <li><strong>The server itself</strong> — bypass authentication, hit <code>http://localhost/admin</code>, retrieve cloud metadata.</li>
+                            <li><strong>Other internal services</strong> — Redis, Elasticsearch, internal admin panels, Kubernetes API server, internal Prometheus, etc.</li>
+                            <li><strong>External services</strong> — abuse as an open proxy, scan ports on third parties, attack internal services of a partner network.</li>
+                        </ol>
+
+                        <h3>The Cloud Metadata Service — The Juicy Target</h3>
+                        <p>Every cloud provider has a special internal IP that returns instance information:</p>
+                        <ul>
+                            <li>AWS / EC2: <code>169.254.169.254</code> and (newer) <code>169.254.170.2</code> for ECS</li>
+                            <li>GCP: <code>metadata.google.internal</code> (also <code>169.254.169.254</code>)</li>
+                            <li>Azure: <code>169.254.169.254</code> (with header requirement)</li>
+                            <li>DigitalOcean: <code>169.254.169.254</code></li>
+                            <li>OpenStack: usually <code>169.254.169.254</code></li>
+                        </ul>
+                        <p>On AWS, hitting <code>169.254.169.254/latest/meta-data/iam/security-credentials/</code> returns the name of the IAM role attached to the instance. Then hitting <code>.../security-credentials/&lt;role-name&gt;</code> returns temporary AWS keys. With those keys, the attacker can assume the role and access whatever S3 buckets, databases, or services it has access to.</p>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Code Examples</h2>
+
+                        <h3>Example 1: Classic Image Proxy (Node.js)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (Express)</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Fetching a user-supplied URL with no validation
+app.get('/proxy', async (req, res) => {
+    const url = req.query.url;
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    res.contentType(response.headers.get('content-type'));
+    res.send(Buffer.from(buffer));
+});
+
+// Attacker calls: /proxy?url=http://169.254.169.254/latest/meta-data/
+// The application makes the request FROM the EC2 instance
+// and returns the metadata response to the attacker.</code></pre>
+                        </div>
+
+                        <h3>Example 2: PDF Generation (Python)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (wkhtmltopdf)</span><span>Vulnerable</span></div>
+                            <pre><code>import subprocess
+
+@app.route('/pdf')
+def generate_pdf():
+    url = request.args.get('url')
+    # ❌ wkhtmltopdf fetches the URL — but also local file:// URLs!
+    # Some versions also support JavaScript, opening XSS in the server
+    result = subprocess.run(
+        ['wkhtmltopdf', url, '/tmp/out.pdf'],
+        capture_output=True, timeout=30
+    )
+    return send_file('/tmp/out.pdf')
+
+# /pdf?url=file:///etc/passwd   → server returns the system file
+# /pdf?url=http://localhost:6379/ → can probe internal services</code></pre>
+                        </div>
+
+                        <h3>Example 3: Webhook Tester (Node.js)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ A tool to test if your webhook works — fetches any URL
+app.post('/test-webhook', async (req, res) => {
+    const { url } = req.body;
+    const result = await fetch(url, { method: 'POST', body: JSON.stringify(req.body) });
+    return res.json({ status: result.status });
+});
+
+// Attacker can:
+// - Hit internal services: { url: 'http://localhost:8080/admin/delete-all' }
+// - Probe internal ports: { url: 'http://10.0.0.5:22' } (server-side port scan)
+// - Steal cloud metadata: { url: 'http://169.254.169.254/...' }</code></pre>
+                        </div>
+
+                        <h3>Example 4: URL Parser Bypass — IPv6, Hex, Octal</h3>
+                        <p>Naive "block <code>169.254.169.254</code>" filters are easy to bypass:</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Bypass payloads</span><span>Attacker</span></div>
+                            <pre><code># All of these resolve to the AWS metadata service:
+http://169.254.169.254/
+http://[::ffff:a9fe:a9fe]/        # IPv4-mapped IPv6
+http://0xa9fea9fe/                 # Hex
+http://0251.0376.0251.0376/        # Octal
+http://2852039166/                 # Decimal
+http://metadata.google.internal/   # GCP name
+http://169.254.169.254.nip.io/     # DNS rebinding trick
+http://localtest.me/               # Resolves to 127.0.0.1 — used to test SSRF
+http://127.0.0.1.xip.io/           # Same trick for localhost
+http://[::1]/                      # IPv6 localhost
+http://0/                          # Linux: 0.0.0.0
+http://127.1/                      # Short form
+http://0x7f.0.0.1/                 # Hex octets
+http://0177.0.0.1/                 # Octal octets</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Capital One Style</h2>
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Find an SSRF surface</strong><p>The WAF or app has a feature that fetches user-supplied URLs. In Capital One's case, the WAF itself had the vulnerable endpoint.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Test the connection</strong><p>Request <code>http://169.254.169.254/</code>. If the response is something other than a connection error, the application can reach the metadata service.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Enumerate the IAM role</strong><p>Request <code>http://169.254.169.254/latest/meta-data/iam/security-credentials/</code>. Returns the name of the role attached to the instance (e.g., <code>web-server-role</code>).</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Get the temporary keys</strong><p>Request <code>http://169.254.169.254/latest/meta-data/iam/security-credentials/web-server-role</code>. Returns an <code>AccessKeyId</code>, <code>SecretAccessKey</code>, and <code>Token</code> valid for ~6 hours.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content"><strong>Configure the AWS CLI with the keys and pivot</strong><p><code>aws configure</code> with the stolen credentials, then <code>aws s3 ls</code> — see all the buckets. <code>aws s3 sync s3://customer-data ./loot</code> — exfiltrate the data.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Approach</h2>
+
+                        <h3>1. Network Egress Restrictions</h3>
+                        <p>The single most effective mitigation. By default, your application servers should not be able to reach arbitrary IPs.</p>
+                        <ul>
+                            <li><strong>AWS</strong>: use a Network Firewall, VPC security groups, or NAT gateway that only allows outbound traffic to a known allowlist of external services.</li>
+                            <li><strong>Block IMDSv1</strong> and require IMDSv2 (which uses a token in a header, making it harder to exploit via SSRF).</li>
+                        </ul>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">AWS CLI</span><span>Require IMDSv2</span></div>
+                            <pre><code># Disable IMDSv1 on the EC2 instance
+aws ec2 modify-instance-metadata-options \
+    --instance-id i-1234567890abcdef0 \
+    --http-tokens required \
+    --http-put-response-hop-limit 1</code></pre>
+                        </div>
+
+                        <h3>2. Validate the URL — DNS, scheme, and resolution</h3>
+                        <p>If you must allow users to supply URLs, validate them strictly. The validation should resolve the hostname and check the resulting IP against an allowlist (and block list for private ranges).</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (using ssrf-req-filter)</span><span>Secure</span></div>
+                            <pre><code>const ssrfFilter = require('ssrf-req-filter');
+
+app.get('/proxy', async (req, res) => {
+    const url = req.query.url;
+    try {
+        // ✅ Resolves the host, checks the IP, blocks private ranges
+        const safeUrl = await ssrfFilter(url);
+        const response = await fetch(safeUrl);
+        res.send(await response.text());
+    } catch (err) {
+        res.status(400).send('URL not allowed');
+    }
+});</code></pre>
+                        </div>
+
+                        <h3>3. Use a Built-in Safe HTTP Client</h3>
+                        <p>Don't roll your own validation. Use a well-tested library.</p>
+                        <ul>
+                            <li><code>node</code>: <code>ssrf-req-filter</code></li>
+                            <li><code>python</code>: <code>ssrf-protect</code>, <code>mitmproxy</code>-based approaches, or <code>httpx</code> with custom transport</li>
+                            <li><code>go</code>: <code>safeurl</code></li>
+                            <li><code>java</code>: Apache HttpClient with <code>RoutePlanner</code> that blocks private IPs</li>
+                        </ul>
+
+                        <h3>4. Disable Unnecessary URL Schemes</h3>
+                        <p>Only allow <code>http://</code> and <code>https://</code>. Block <code>file://</code>, <code>gopher://</code>, <code>dict://</code>, <code>ftp://</code>, <code>ldap://</code> at the HTTP client or the URL parser.</p>
+
+                        <h3>5. Handle Redirects Safely</h3>
+                        <p>Even if you validate the initial URL, the server might respond with a 302 to <code>http://169.254.169.254/</code>. Always re-validate after redirects — or disable redirects.</p>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Secure</span></div>
+                            <pre><code>// ✅ Disable automatic redirects
+const response = await fetch(url, { redirect: 'manual' });
+if ([301, 302, 303, 307, 308].includes(response.status)) {
+    // Re-validate the Location header before following
+    const next = await ssrfFilter(response.headers.get('location'));
+    return await fetch(next, { redirect: 'manual' });
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>Burp Collaborator</h5><p>Out-of-band interaction server. Detects SSRF even when the response isn't returned.</p></div>
+                            <div class="tool-card"><h5>Interactsh (open source)</h5><p>Free alternative to Burp Collaborator. Probes DNS, HTTP, and SMTP for callbacks.</p></div>
+                            <div class="tool-card"><h5>SSRFmap</h5><p>Automated SSRF exploitation framework. Supports many bypasses and target services.</p></div>
+                            <div class="tool-card"><h5>Gopherus</h5><p>Generates gopher:// payloads to attack internal services (Redis, Memcached, etc.).</p></div>
+                            <div class="tool-card"><h5>SwAG (SSRF on AWS Generator)</h5><p>Generates payloads specifically for AWS SSRF scenarios.</p></div>
+                            <div class="tool-card"><h5>Canarytokens</h5><p>Quick &amp; free DNS/HTTP tokens to detect when an SSRF is triggered.</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ Layered Defense</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Apply network egress filtering: only allow outbound traffic to the specific external services you need.</li>
+                                <li>Require IMDSv2 on AWS, equivalent on GCP / Azure.</li>
+                                <li>Validate the URL: scheme allowlist, DNS resolution check, IP allowlist / blocklist (block all RFC 1918, link-local, loopback).</li>
+                                <li>Disable HTTP redirects, or re-validate after every redirect.</li>
+                                <li>Don't expose detailed error messages that reveal internal IPs or services.</li>
+                                <li>Limit the IAM role of every instance to the bare minimum (least privilege).</li>
+                                <li>For services that don't need to fetch URLs, don't add that capability. Avoid the feature creep.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">1 (CWE-918)</span></div>
+                        <div class="sidebar-info-row"><span class="label">Top Example</span><span class="value">Capital One 2019</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Expert</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>

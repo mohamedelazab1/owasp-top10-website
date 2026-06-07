@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A09:2021 – Security Logging &amp; Monitoring Failures · OWASP Top 10</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo"><span class="logo-icon">🛡️</span><span>OWASP<span class="logo-accent">Top10</span></span></a>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#vulnerabilities">Vulnerabilities</a></li>
+                <li><a href="https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/" target="_blank" rel="noopener">Official Docs ↗</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="vuln-page">
+        <div class="container">
+            <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html#vulnerabilities">Vulnerabilities</a> / <span>A09</span></div>
+
+            <header class="vuln-hero">
+                <span class="vuln-id-large">OWASP-A09:2021</span>
+                <h1>Security Logging &amp; Monitoring Failures</h1>
+                <p class="lead">Without logging and monitoring, breaches cannot be detected. Insufficient logging, missing alerts, and the inability to investigate and respond to incidents in time allow attackers to persist in compromised systems for months.</p>
+                <div class="vuln-meta-row">
+                    <span class="vuln-diff hard">Difficulty: Hard</span>
+                    <div class="vuln-tags">
+                        <span class="tag">SIEM</span>
+                        <span class="tag">IR</span>
+                        <span class="tag">Detection</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <div class="content-main">
+                    <section>
+                        <h2>Real-World Incidents</h2>
+                        <h3>Target Breach (2013) — 110M Cards</h3>
+                        <p>Target's point-of-sale systems were infected with malware (BlackPOS / Kaptoxa) that scraped 40 million payment cards over 19 days. <strong>Target's security tools actually generated alerts</strong> — FireEye's intrusion detection flagged the malware on November 30, 2013. The SOC team in Bangalore received the alert, escalated it to headquarters, but <strong>no one acted on it</strong>. The attackers persisted for two more weeks, exfiltrating 11GB of card data. Target paid <strong>$292 million</strong> in settlements, and the CISO resigned.</p>
+
+                        <h3>Other Notable Incidents</h3>
+                        <ul>
+                            <li><strong>Equifax (2017)</strong> — Attackers were inside Equifax's network for <strong>76 days</strong> before being detected. The expired SSL certificate on the monitoring system meant alerts were never sent.</li>
+                            <li><strong>Capital One (2019)</strong> — The attacker, a former AWS employee, was inside the network for <strong>4 months</strong> before a tipster email alerted the company. By then, 100M records had been exfiltrated.</li>
+                            <li><strong>SolarWinds (2020)</strong> — The malicious code was in SolarWinds' builds for <strong>over a year</strong> before FireEye discovered it while investigating their own breach.</li>
+                            <li><strong>Maersk / NotPetya (2017)</strong> — The destructive malware spread across Maersk's global network in <strong>7 minutes</strong>, encrypting 49,000 devices. The single domain controller in their DHCP range was unpatched. Maersk reported $300M in damages.</li>
+                            <li><strong>Yahoo (2013-2014)</strong> — The breach was only disclosed in 2016, two years after discovery, which itself was three years after the breach.</li>
+                            <li><strong>Marriott (2018)</strong> — Attackers inside Marriott systems for <strong>4 years</strong> (since 2014, when Starwood was compromised). 339 million guest records exposed.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>How It Works — The Detection &amp; Response Gap</h2>
+                        <p>Most breaches follow a similar pattern. Mandiant's M-Trends report says the global median <strong>dwell time</strong> (time between intrusion and detection) is around 10 days, but in some industries it's still measured in months.</p>
+
+                        <h3>1. The Attacker's Typical Kill Chain</h3>
+                        <ol>
+                            <li>Initial access (phishing, exposed RDP, vulnerable web app)</li>
+                            <li>Establish persistence (web shell, scheduled task, startup item)</li>
+                            <li>Privilege escalation (mimikatz, token impersonation)</li>
+                            <li>Credential dumping and lateral movement</li>
+                            <li>Data discovery and staging</li>
+                            <li>Exfiltration (over days or weeks)</li>
+                        </ol>
+                        <p>Every step is detectable — but only if you're logging, correlating, and alerting on the right signals.</p>
+
+                        <h3>2. Common Detection Failures</h3>
+                        <ul>
+                            <li>Authentication events (success AND failure) aren't logged, or aren't retained.</li>
+                            <li>Logs are stored on the same host as the application (deleted in the breach).</li>
+                            <li>No central SIEM, no correlation rules, no automated alerting.</li>
+                            <li>Alerts go to a distribution list with no on-call rotation.</li>
+                            <li>No incident response plan. No runbooks. No practice drills.</li>
+                            <li>No metrics — the team doesn't know their MTTD (mean time to detect) or MTTR (mean time to respond).</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Vulnerable Code Examples — What NOT to Log</h2>
+
+                        <h3>Example 1: Logging Passwords &amp; Sensitive Data</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>❌ Multiple Problems</span></div>
+                            <pre><code>// ❌ Logging the full request body including the password
+app.post('/login', (req, res) => {
+    console.log('Login attempt:', req.body);
+    // Now the password is in plain text in /var/log/app.log
+    // and shipped to your log aggregator (Datadog, Splunk, etc.)
+    // If ANY of those are breached, you have a credentials dump.
+});</code></pre>
+                        </div>
+
+                        <h3>Example 2: No Logging at All on Auth Events</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Python (Flask)</span><span>Vulnerable</span></div>
+                            <pre><code>@app.route('/login', methods=['POST'])
+def login():
+    user = db.users.find_one({'email': request.json['email']})
+    if user and bcrypt.checkpw(request.json['password'], user['password']):
+        session['user_id'] = user['_id']
+        return {'status': 'ok'}
+    return {'status': 'fail'}, 401
+
+# ❌ No logging of:
+#   - failed login attempts
+#   - successful logins (with timestamp, IP, user agent)
+#   - subsequent privileged actions
+# An attacker brute-forcing 10k passwords leaves no trace.</code></pre>
+                        </div>
+
+                        <h3>Example 3: Catch-All Exception Handler that Swallows</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js</span><span>Vulnerable</span></div>
+                            <pre><code>// ❌ Catch errors and just return 500
+app.use((err, req, res, next) => {
+    res.status(500).send('Something went wrong');
+});
+// The error is gone. No record of:
+#   - the SQLi attempt that caused it
+#   - the request that triggered it
+#   - the user that tried it
+# Perfect for an attacker — silent probing is invisible.</code></pre>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Attack Walkthrough — Staying Hidden in Plain Sight</h2>
+                        <p>This is what a sophisticated attacker does once inside, knowing that <em>lack of logging</em> is often the biggest weakness.</p>
+
+                        <div class="attack-flow">
+                            <div class="attack-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content"><strong>Use legitimate credentials</strong><p>Don't create new accounts. Use stolen, valid credentials for the application's own users (perhaps purchased from a credential dump). The application sees a "valid" login.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content"><strong>Slow down exfiltration</strong><p>Don't dump the entire DB in one query. Take 50 records per hour over 6 months. Avoids any "large export" alerts.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content"><strong>Blend with normal traffic</strong><p>Use the same endpoints real users use. Don't probe hidden admin paths (which would log 404s). Don't use a vulnerability scanner (which would log 1000s of 4xx responses).</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">4</div>
+                                <div class="step-content"><strong>Use application's own functionality</strong><p>Use the export-to-CSV feature to download data. Use the bulk email feature to send phishing. Use the file upload to plant a webshell that looks like a user's image.</p></div>
+                            </div>
+                            <div class="attack-step">
+                                <div class="step-num">5</div>
+                                <div class="step-content"><strong>Disable or tamper with logs</strong><p>If the attacker gets RCE on a server, the first thing they do is <code>rm -rf /var/log/*</code> or modify the application to stop logging. A good detection program sends logs off-host in real time, so this is harder.</p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Secure Approach — A Modern Detection Stack</h2>
+
+                        <h3>1. Structured Application Logging</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (pino)</span><span>Secure</span></div>
+                            <pre><code>const pino = require('pino');
+const logger = pino();
+
+app.post('/login', loginLimiter, async (req, res) => {
+    const { email, password } = req.body;
+    const user = await db.users.findOne({ email });
+
+    // ✅ Always run bcrypt to prevent timing attacks
+    const ok = user && await bcrypt.compare(password, user.password);
+
+    if (!ok) {
+        // ✅ Log failures with enough context to detect brute force
+        logger.warn({
+            event: 'auth.failure',
+            email,
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            timestamp: new Date().toISOString(),
+        }, 'Login failed');
+        return res.status(401).send('Invalid');
+    }
+
+    // ✅ Log successful logins — used to detect impossible travel
+    logger.info({
+        event: 'auth.success',
+        userId: user.id,
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+    }, 'Login successful');
+    res.send('ok');
+});</code></pre>
+                        </div>
+
+                        <h3>2. Never Log Sensitive Data</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Node.js (pino redaction)</span><span>Secure</span></div>
+                            <pre><code>const logger = pino({
+    redact: {
+        paths: [
+            'req.headers.cookie',
+            'req.headers.authorization',
+            'req.body.password',
+            'req.body.token',
+            'req.body.creditCard',
+            '*.password',
+            '*.secret',
+            '*.apiKey',
+        ],
+        censor: '[REDACTED]',
+    },
+});</code></pre>
+                        </div>
+
+                        <h3>3. Detection Rules (Sigma format — vendor-neutral)</h3>
+                        <div class="code-block">
+                            <div class="code-header"><span class="code-lang">Sigma rule (YAML)</span><span>Detection Engineering</span></div>
+                            <pre><code>title: Brute Force Login Attempts
+status: stable
+logsource:
+    product: webserver
+    category: application
+detection:
+    selection:
+        event: 'auth.failure'
+    timeframe: 5m
+    condition: selection | count() &gt; 20 by ip
+    # 20+ failed logins from the same IP in 5 minutes → alert
+fields:
+    - email
+    - userAgent
+level: high
+description: Detects credential brute-forcing attempts.</code></pre>
+                        </div>
+
+                        <h3>4. Centralized Logging with a SIEM</h3>
+                        <p>Send logs from all systems (apps, servers, cloud, network) to a SIEM like Splunk, Elastic, Sentinel, or Sumo Logic. Correlate across sources.</p>
+                        <ul>
+                            <li><strong>WAF logs + app logs</strong> — see the full request context for a blocked attack</li>
+                            <li><strong>Auth logs + VPN logs</strong> — detect a session token replayed from a new IP</li>
+                            <li><strong>DB logs + app logs</strong> — detect a query from a compromised user account that returns 100x normal data</li>
+                        </ul>
+
+                        <h3>5. Build an Incident Response Plan</h3>
+                        <ul>
+                            <li>Document roles (who's on call, who has authority to make decisions).</li>
+                            <li>Build runbooks for common scenarios (data breach, ransomware, DDoS).</li>
+                            <li>Run tabletop exercises quarterly.</li>
+                            <li>Have a pre-drafted customer communication template.</li>
+                            <li>Pre-stage tools: forensic image scripts, network captures, EDR queries.</li>
+                            <li>Practice — most teams discover their IR plan is broken during their first real incident.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2>Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-card"><h5>Splunk / Elastic / Sentinel</h5><p>SIEM platforms. Centralize logs, search, and alert.</p></div>
+                            <div class="tool-card"><h5>Sigma rules</h5><p>Vendor-neutral detection rule format. Use the public Sigma repo for free, battle-tested rules.</p></div>
+                            <div class="tool-card"><h5>OSQuery / Fleet</h5><p>Endpoint telemetry as SQL queries. Great for hunting.</p></div>
+                            <div class="tool-card"><h5>Falco / Tetragon</h5><p>Runtime security for Kubernetes. Detects anomalous process and network behavior.</p></div>
+                            <div class="tool-card"><h5>Sentry / Rollbar / Datadog</h5><p>Application error monitoring. Sends alerts on unusual exception rates.</p></div>
+                            <div class="tool-card"><h5>Velociraptor / GRR</h5><p>Digital forensics / incident response tools for live systems.</p></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Prevention Checklist</h2>
+                        <div class="callout success">
+                            <div class="callout-title">✅ A Defensible Detection Program</div>
+                            <ul style="margin-top: 12px; padding-left: 20px;">
+                                <li>Log authentication events (success and failure), access control failures, and validation failures — with sufficient context (user, IP, UA, timestamp).</li>
+                                <li>Generate logs in a format your SIEM can ingest (JSON over syslog, or via Filebeat/Vector).</li>
+                                <li>Redact sensitive data before logging. Test for it in CI.</li>
+                                <li>Set up detection rules for brute force, impossible travel, mass data access, and other common patterns.</li>
+                                <li>Establish or subscribe to a threat intel feed — know which CVEs and TTPs matter to your stack.</li>
+                                <li>Send logs off-host in real time. Store immutable backups (e.g., write-only S3 buckets with object lock).</li>
+                                <li>Build and practice an incident response plan. Test it with a tabletop exercise quarterly.</li>
+                                <li>Track MTTD and MTTR. Set a goal. Improve it.</li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="sidebar">
+                    <h4>On This Page</h4>
+                    <ul class="sidebar-toc">
+                        <li><a href="#real-incident">Real Incidents</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#vulnerable-code">Vulnerable Code</a></li>
+                        <li><a href="#attack-walkthrough">Attack Walkthrough</a></li>
+                        <li><a href="#secure-code">Secure Code</a></li>
+                        <li><a href="#prevention">Prevention</a></li>
+                    </ul>
+                    <div class="sidebar-info">
+                        <h4>Quick Facts</h4>
+                        <div class="sidebar-info-row"><span class="label">CWE Count</span><span class="value">4</span></div>
+                        <div class="sidebar-info-row"><span class="label">Top Example</span><span class="value">Target 2013</span></div>
+                        <div class="sidebar-info-row"><span class="label">Difficulty</span><span class="value">Hard</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-bottom"><p>© 2025 OWASP Top 10 Educational Project</p></div></div></footer>
+    <script src="../js/main.js"></script>
+</body>
+</html>
